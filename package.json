@@ -9,12 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.5.38"
+    "@iconify/vue": "^5.0.1",
+    "gsap": "^3.15.0",
+    "vue": "^3.5.38",
+    "vue-i18n": "^11.4.6",
+    "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/tsconfig": "^0.9.1",
+    "@vueuse/core": "^14.3.0",
+    "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.0",
     "vue-tsc": "^3.3.5"
