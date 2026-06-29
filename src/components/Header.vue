@@ -1,10 +1,10 @@
 <template>
   <header class="header">
     <div class="header-content">
-      <div class="logo-area">
+      <router-link to="/" class="logo-area">
         <img src="/icon.png" alt="GDPM" class="logo-icon">
         <span class="logo-text">GDPM</span>
-      </div>
+      </router-link>
       <nav class="nav-links">
         <a href="#features" class="nav-link">{{ t('nav.features') }}</a>
         <a href="#installation" class="nav-link">{{ t('nav.docs') }}</a>
@@ -15,7 +15,6 @@
           <button :class="{ active: locale === 'en' }" @click="locale = 'en'">EN</button>
           <button :class="{ active: locale === 'zh' }" @click="locale = 'zh'">中文</button>
         </div>
-        <a href="#installation" class="header-cta">{{ t('hero.getStarted') }}</a>
       </div>
     </div>
   </header>
@@ -53,6 +52,12 @@ const { t, locale } = useI18n()
   display: flex;
   align-items: center;
   gap: 10px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.logo-area:hover {
+  opacity: 0.8;
 }
 
 .logo-icon {

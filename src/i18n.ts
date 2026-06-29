@@ -58,6 +58,15 @@ const messages = {
         godot: { name: 'gdpm godot', desc: 'Manage Godot engine versions' }
       }
     },
+    quickstart: {
+      title: 'Quick Start',
+      subtitle: 'Get started in 3 simple steps',
+      step1Title: 'Install GDPM',
+      step2Title: 'Initialize your project or create a new one',
+      step3Title: 'Add plugins',
+      or: 'or',
+      viewDocs: 'View documentation'
+    },
     community: {
       title: 'Community',
       subtitle: 'Join the GDPM community',
@@ -85,8 +94,9 @@ const messages = {
       goHome: 'Go Home',
       downloads: 'Downloads',
       install: 'Installation',
-      changelog: 'Changelog',
-      viewOnGitHub: 'View on GitHub'
+      releaseNotes: 'Release Notes',
+      viewOnGitHub: 'View on GitHub',
+      viewOnPyPI: 'View on PyPI'
     }
   },
   zh: {
@@ -146,6 +156,15 @@ const messages = {
         godot: { name: 'gdpm godot', desc: '管理 Godot 引擎版本' }
       }
     },
+    quickstart: {
+      title: '快速开始',
+      subtitle: '3 步即可上手',
+      step1Title: '安装 GDPM',
+      step2Title: '初始化项目或创建新项目',
+      step3Title: '添加插件',
+      or: '或',
+      viewDocs: '查看文档'
+    },
     community: {
       title: '社区',
       subtitle: '加入 GDPM 社区',
@@ -173,8 +192,9 @@ const messages = {
       goHome: '回到首页',
       downloads: '下载',
       install: '安装',
-      changelog: '更新日志',
-      viewOnGitHub: '在 GitHub 查看'
+      releaseNotes: '更新日志',
+      viewOnGitHub: '在 GitHub 查看',
+      viewOnPyPI: '在 PyPI 查看'
     }
   }
 }

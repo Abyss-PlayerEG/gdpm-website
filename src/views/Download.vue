@@ -57,6 +57,7 @@
           <p class="section-title">SHA256</p>
           <div class="checksum-list">
             <div v-for="asset in assets" :key="asset.name" class="checksum-item">
+              <Icon :icon="getPlatformIcon(asset.name)" width="16" height="16" class="checksum-icon" />
               <span class="checksum-name">{{ asset.name }}</span>
               <div class="checksum-hash">
                 <code>{{ asset.digest ? asset.digest.replace('sha256:', '') : '-' }}</code>
@@ -82,10 +83,19 @@
           </div>
         </div>
 
+        <div v-if="release!.body" class="release-notes-section">
+          <p class="section-title">{{ t('download.releaseNotes') }}</p>
+          <div class="release-notes markdown-body" v-html="renderedNotes"></div>
+        </div>
+
         <div class="links">
           <a :href="release!.html_url" target="_blank" class="github-link">
             <Icon icon="ri:github-fill" width="16" height="16" />
             {{ t('download.viewOnGitHub') }}
+          </a>
+          <a :href="`https://pypi.org/project/godot-gdpm/${version}/`" target="_blank" class="github-link">
+            <Icon icon="akar-icons:python-fill" width="16" height="16" />
+            {{ t('download.viewOnPyPI') }}
           </a>
         </div>
       </template>
@@ -98,6 +108,7 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import { marked } from 'marked'
 import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch } from '../composables/useReleaseDownload'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
@@ -126,6 +137,11 @@ const versionTags = computed(() => {
   const type = getVersionType(version)
   if (type !== 'stable') tags.push(type)
   return tags
+})
+
+const renderedNotes = computed(() => {
+  if (!release.value?.body) return ''
+  return marked(release.value.body)
 })
 
 const getPlatformIcon = (name: string): string => {
@@ -408,11 +424,16 @@ const copyHash = async (hash: string, name: string) => {
 .checksum-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding: 12px 16px;
   border-radius: 8px;
   background: rgba(30, 41, 59, 0.4);
   border: 1px solid rgba(51, 65, 85, 0.2);
+}
+
+.checksum-icon {
+  color: #478CBF;
+  flex-shrink: 0;
 }
 
 .checksum-name {
@@ -452,7 +473,94 @@ const copyHash = async (hash: string, name: string) => {
   background: rgba(71, 140, 191, 0.1);
 }
 
+.release-notes-section {
+  margin-bottom: 48px;
+}
+
+.release-notes {
+  padding: 24px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  color: #94A3B8;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.release-notes :deep(h1),
+.release-notes :deep(h2),
+.release-notes :deep(h3) {
+  color: #FFFFFF;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.release-notes :deep(h1) {
+  font-size: 20px;
+}
+
+.release-notes :deep(h2) {
+  font-size: 18px;
+}
+
+.release-notes :deep(h3) {
+  font-size: 16px;
+}
+
+.release-notes :deep(p) {
+  margin-bottom: 12px;
+}
+
+.release-notes :deep(ul),
+.release-notes :deep(ol) {
+  margin-bottom: 12px;
+  padding-left: 24px;
+}
+
+.release-notes :deep(li) {
+  margin-bottom: 4px;
+}
+
+.release-notes :deep(code) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(71, 140, 191, 0.1);
+  color: #93C5FD;
+}
+
+.release-notes :deep(pre) {
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  overflow-x: auto;
+}
+
+.release-notes :deep(pre code) {
+  background: none;
+  padding: 0;
+}
+
+.release-notes :deep(a) {
+  color: #478CBF;
+  text-decoration: none;
+}
+
+.release-notes :deep(a:hover) {
+  text-decoration: underline;
+}
+
+.release-notes :deep(hr) {
+  border: none;
+  border-top: 1px solid rgba(51, 65, 85, 0.3);
+  margin: 16px 0;
+}
+
 .links {
+  display: flex;
+  gap: 24px;
   padding-top: 32px;
   border-top: 1px solid rgba(51, 65, 85, 0.2);
 }

@@ -1,11 +1,11 @@
 <template>
   <section class="hero">
     <div class="hero-content">
-      <span class="hero-badge">v{{ latestVersion }} • {{ t('hero.badgeLabel') }}</span>
+      <span class="hero-badge">v{{ latestStable }} • {{ t('hero.badgeLabel') }}</span>
       <h1 class="hero-title">{{ t('hero.title') }}</h1>
       <p class="hero-subtitle" v-html="t('hero.subtitle').replace('\n', '<br>')"></p>
       <div class="hero-cta-row">
-        <a href="#installation" class="btn-primary">{{ t('hero.getStarted') }}</a>
+        <a href="#quickstart" class="btn-primary">{{ t('hero.getStarted') }}</a>
         <button class="btn-secondary" @click="copyInstallCommand">
           {{ copied ? t('hero.copied') : t('hero.installCommand') }}
         </button>
@@ -20,13 +20,18 @@ $ gdpm sync
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
+import { getVersionType } from '../utils/version'
 
 const { t } = useI18n()
-const { latestVersion } = useGitHubReleases()
+const { versions } = useGitHubReleases()
 const copied = ref(false)
+
+const latestStable = computed(() => {
+  return versions.value.find(v => getVersionType(v) === 'stable') || versions.value[0] || ''
+})
 
 const copyInstallCommand = async () => {
   await navigator.clipboard.writeText('pip install godot-gdpm')

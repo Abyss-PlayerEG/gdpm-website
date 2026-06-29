@@ -2,8 +2,7 @@
   <div class="home">
     <Hero />
     <Features />
-    <Installation />
-    <Commands />
+    <QuickStart />
     <Versions />
     <Community />
   </div>
@@ -12,8 +11,7 @@
 <script setup lang="ts">
 import Hero from '../components/Hero.vue'
 import Features from '../components/Features.vue'
-import Installation from '../components/Installation.vue'
-import Commands from '../components/Commands.vue'
+import QuickStart from '../components/QuickStart.vue'
 import Versions from '../components/Versions.vue'
 import Community from '../components/Community.vue'
 </script>
