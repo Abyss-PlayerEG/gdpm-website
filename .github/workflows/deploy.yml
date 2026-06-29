@@ -27,10 +27,11 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
+      - name: Disable pnpm minimum release age check
+        run: pnpm config set minimum-release-age 0
+
       - name: Install dependencies
         run: pnpm install
-        env:
-          PNPM_CONFIG_MINIMUM_RELEASE_AGE: 0
 
       - name: Build
         run: pnpm build
