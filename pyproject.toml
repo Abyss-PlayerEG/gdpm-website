@@ -1,8 +1,9 @@
 [project]
 name = "gdpm-website"
 version = "0.1.0"
-description = "GDPM official website"
+description = "Official website for GDPM - Godot Dependency Package Manager"
 readme = "README.md"
+license = "GPL-3.0"
 requires-python = ">=3.12"
 dependencies = []
 
