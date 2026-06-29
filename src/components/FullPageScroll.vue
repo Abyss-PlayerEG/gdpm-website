@@ -1,10 +1,9 @@
 <template>
   <div ref="container" class="fullpage">
     <section
-      v-for="(section, index) in sections"
+      v-for="section in sections"
       :key="section.id"
       class="fullpage-section"
-      :class="{ 'is-active': activeIndex === index }"
     >
       <slot :name="section.id" />
     </section>
@@ -15,6 +14,7 @@
         :key="section.id"
         class="nav-dot"
         :class="{ active: activeIndex === index }"
+        :style="getDotStyle(index)"
         @click="scrollTo(index)"
       />
     </nav>
@@ -33,35 +33,79 @@ const props = defineProps<{
 }>()
 
 const activeIndex = ref(0)
+const scrollProgress = ref(0)
 const container = ref<HTMLElement>()
 
 let isScrolling = false
-let scrollTimeout: ReturnType<typeof setTimeout>
+
+const getDotStyle = (index: number) => {
+  const progress = scrollProgress.value
+  const current = activeIndex.value
+
+  // Current dot - fade out as scrolling away
+  if (index === current) {
+    const opacity = 1 - (progress % 1)
+    const scale = 1.2 - 0.2 * (progress % 1)
+    return {
+      opacity: Math.max(0.3, opacity),
+      transform: `scale(${Math.max(1, scale)})`,
+      background: opacity > 0.5 ? '#478CBF' : 'transparent',
+      borderColor: '#478CBF',
+    }
+  }
+
+  // Next dot - fade in as scrolling towards it
+  if (index === current + 1 && progress % 1 > 0) {
+    const opacity = progress % 1
+    const scale = 1 + 0.2 * (progress % 1)
+    return {
+      opacity: Math.max(0.3, opacity),
+      transform: `scale(${Math.max(1, scale)})`,
+      background: opacity > 0.5 ? '#478CBF' : 'transparent',
+      borderColor: '#478CBF',
+    }
+  }
+
+  // Previous dot - fade in when scrolling back
+  if (index === current - 1 && progress % 1 < 0) {
+    const opacity = Math.abs(progress % 1)
+    const scale = 1 + 0.2 * Math.abs(progress % 1)
+    return {
+      opacity: Math.max(0.3, opacity),
+      transform: `scale(${Math.max(1, scale)})`,
+      background: opacity > 0.5 ? '#478CBF' : 'transparent',
+      borderColor: '#478CBF',
+    }
+  }
+
+  // Inactive dots
+  return {
+    opacity: 0.3,
+    transform: 'scale(1)',
+    background: 'transparent',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  }
+}
 
 const handleScroll = () => {
-  if (!container.value || isScrolling) return
+  if (!container.value) return
 
-  clearTimeout(scrollTimeout)
-  scrollTimeout = setTimeout(() => {
-    if (!container.value) return
+  const scrollTop = container.value.scrollTop
+  const height = container.value.clientHeight
+  const rawProgress = scrollTop / height
 
-    const scrollTop = container.value.scrollTop
-    const height = container.value.clientHeight
-    const index = Math.round(scrollTop / height)
+  activeIndex.value = Math.floor(rawProgress)
+  scrollProgress.value = rawProgress
 
-    if (index !== activeIndex.value) {
-      activeIndex.value = index
-    }
-
-    // Remove hash from URL
-    if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname)
-    }
-  }, 50)
+  // Remove hash from URL
+  if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname)
+  }
 }
 
 const scrollTo = (index: number) => {
   if (!container.value || isScrolling) return
+  if (index < 0 || index >= props.sections.length) return
 
   isScrolling = true
   const height = container.value.clientHeight
@@ -72,10 +116,11 @@ const scrollTo = (index: number) => {
   })
 
   activeIndex.value = index
+  scrollProgress.value = index
 
   setTimeout(() => {
     isScrolling = false
-  }, 800)
+  }, 600)
 }
 
 const scrollToSection = (sectionId: string) => {
@@ -86,12 +131,13 @@ const scrollToSection = (sectionId: string) => {
 }
 
 onMounted(() => {
-  container.value?.addEventListener('scroll', handleScroll, { passive: true })
+  if (!container.value) return
+
+  container.value.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
   container.value?.removeEventListener('scroll', handleScroll)
-  clearTimeout(scrollTimeout)
 })
 
 defineExpose({ scrollTo, scrollToSection, activeIndex })
@@ -114,7 +160,7 @@ defineExpose({ scrollTo, scrollToSection, activeIndex })
 
 .fullpage-nav {
   position: fixed;
-  right: 24px;
+  right: 16px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -130,7 +176,7 @@ defineExpose({ scrollTo, scrollToSection, activeIndex })
   border: 2px solid rgba(255, 255, 255, 0.3);
   background: transparent;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
   padding: 0;
 }
 
@@ -138,9 +184,14 @@ defineExpose({ scrollTo, scrollToSection, activeIndex })
   border-color: rgba(255, 255, 255, 0.7);
 }
 
-.nav-dot.active {
-  background: #478CBF;
-  border-color: #478CBF;
-  transform: scale(1.2);
+@media (max-width: 640px) {
+  .fullpage-nav {
+    right: 8px;
+    gap: 8px;
+  }
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+  }
 }
 </style>
