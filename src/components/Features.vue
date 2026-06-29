@@ -65,11 +65,13 @@ const features = [
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
+  min-width: 0;
 }
 
 .feature-card {
-  min-height: 240px;
-  padding: 28px 24px;
+  min-height: 200px;
+  min-width: 180px;
+  padding: 24px;
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
   border: 1px solid rgba(51, 65, 85, 0.3);
