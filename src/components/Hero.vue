@@ -1,11 +1,11 @@
 <template>
   <section class="hero">
     <div class="hero-content">
-      <span class="hero-badge">v{{ latestStable }} • {{ t('hero.badgeLabel') }}</span>
-      <h1 class="hero-title">{{ t('hero.title') }}</h1>
-      <p class="hero-subtitle" v-html="t('hero.subtitle').replace('\n', '<br>')"></p>
-      <div class="hero-cta-row">
-        <a href="#quickstart" class="btn-primary">{{ t('hero.getStarted') }}</a>
+      <span class="hero-badge" data-animate="fadeUp" data-delay="0.1">v{{ latestStable }} • {{ t('hero.badgeLabel') }}</span>
+      <h1 class="hero-title" data-animate="fadeUp" data-delay="0.2">{{ t('hero.title') }}</h1>
+      <p class="hero-subtitle" data-animate="fadeUp" data-delay="0.3" v-html="t('hero.subtitle').replace('\n', '<br>')"></p>
+      <div class="hero-cta-row" data-animate="fadeUp" data-delay="0.4">
+        <button class="btn-primary" @click="scrollToQuickStart">{{ t('hero.getStarted') }}</button>
         <button class="btn-secondary" @click="copyInstallCommand">
           {{ copied ? t('hero.copied') : t('hero.installCommand') }}
         </button>
@@ -25,6 +25,10 @@ import { useI18n } from 'vue-i18n'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType } from '../utils/version'
 
+const emit = defineEmits<{
+  (e: 'scroll-to', sectionId: string): void
+}>()
+
 const { t } = useI18n()
 const { versions } = useGitHubReleases()
 const copied = ref(false)
@@ -38,15 +42,19 @@ const copyInstallCommand = async () => {
   copied.value = true
   setTimeout(() => copied.value = false, 2000)
 }
+
+const scrollToQuickStart = () => {
+  emit('scroll-to', 'quickstart')
+}
 </script>
 
 <style scoped>
 .hero {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 120px 2rem 80px;
+  padding: 80px 2rem 40px;
   background: radial-gradient(ellipse at 50% 0%, rgba(71, 140, 191, 0.15) 0%, transparent 50%);
 }
 
@@ -93,11 +101,12 @@ const copyInstallCommand = async () => {
   min-width: 180px;
   padding: 14px 32px;
   border-radius: 8px;
+  border: none;
   background: #478CBF;
   color: #FFFFFF;
   font-size: 16px;
   font-weight: 600;
-  text-decoration: none;
+  cursor: pointer;
   text-align: center;
   transition: background 0.2s;
 }

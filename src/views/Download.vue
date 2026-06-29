@@ -85,6 +85,9 @@
 
         <div v-if="release!.body" class="release-notes-section">
           <p class="section-title">{{ t('download.releaseNotes') }}</p>
+          <div v-if="!hasTranslation && locale === 'zh'" class="translation-notice">
+            {{ t('download.noTranslation') }}
+          </div>
           <div class="release-notes markdown-body" v-html="renderedNotes"></div>
         </div>
 
@@ -109,12 +112,12 @@ import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch } from '../composables/useReleaseDownload'
+import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, parseReleaseNotes } from '../composables/useReleaseDownload'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
 import type { VersionType } from '../utils/version'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const version = route.params.version as string
 const copied = ref(false)
@@ -141,7 +144,15 @@ const versionTags = computed(() => {
 
 const renderedNotes = computed(() => {
   if (!release.value?.body) return ''
-  return marked(release.value.body)
+  const notes = parseReleaseNotes(release.value.body)
+  const content = locale.value === 'zh' && notes.zh ? notes.zh : notes.en
+  return marked(content)
+})
+
+const hasTranslation = computed(() => {
+  if (!release.value?.body) return false
+  const notes = parseReleaseNotes(release.value.body)
+  return !!notes.zh
 })
 
 const getPlatformIcon = (name: string): string => {
@@ -475,6 +486,16 @@ const copyHash = async (hash: string, name: string) => {
 
 .release-notes-section {
   margin-bottom: 48px;
+}
+
+.translation-notice {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: rgba(237, 137, 54, 0.1);
+  border: 1px solid rgba(237, 137, 54, 0.2);
+  color: #ED8936;
+  font-size: 13px;
 }
 
 .release-notes {

@@ -1,8 +1,8 @@
 <template>
   <section class="versions">
     <div class="versions-content">
-      <h2 class="section-title">{{ t('versions.title') }}</h2>
-      <p class="section-subtitle">{{ t('versions.subtitle') }}</p>
+      <h2 class="section-title" data-animate="fadeUp">{{ t('versions.title') }}</h2>
+      <p class="section-subtitle" data-animate="fadeUp" data-delay="0.1">{{ t('versions.subtitle') }}</p>
 
       <div v-if="loading" class="loading">
         <Icon icon="ri:loader-4-line" width="24" height="24" class="spin" />
@@ -15,15 +15,15 @@
         <button @click="refresh" class="retry-btn">{{ t('versions.retry') }}</button>
       </div>
 
-      <div v-else class="versions-preview">
+      <div v-else class="versions-preview" data-animate="fadeUp" data-delay="0.2">
         <div class="version-cards">
           <router-link
             v-if="latestStable"
             :to="`/download/${latestStable}`"
             class="version-card card-latest"
           >
-            <span class="card-badge badge-latest">Latest</span>
             <span class="card-version">v{{ latestStable }}</span>
+            <span class="card-badge badge-latest">Latest</span>
           </router-link>
 
           <router-link
@@ -31,8 +31,8 @@
             :to="`/download/${latestPreRelease}`"
             class="version-card card-pre"
           >
-            <span class="card-badge badge-pre">Pre-release</span>
             <span class="card-version">v{{ latestPreRelease }}</span>
+            <span class="card-badge badge-pre">Pre-release</span>
           </router-link>
         </div>
 
@@ -66,8 +66,12 @@ const latestPreRelease = computed(() => {
 
 <style scoped>
 .versions {
-  padding: 100px 2rem;
-  background: #0F172A;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 2rem;
+  background: #0B1120;
 }
 
 .versions-content {
@@ -219,9 +223,16 @@ const latestPreRelease = computed(() => {
   .version-cards {
     flex-direction: column;
     width: 100%;
+    gap: 12px;
   }
   .version-card {
     min-width: auto;
+    width: 100%;
+    padding: 14px 20px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
 }
 </style>

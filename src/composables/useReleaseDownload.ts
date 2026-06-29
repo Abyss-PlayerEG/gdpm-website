@@ -122,3 +122,35 @@ export function getArch(name: string): string {
   if (name.includes('amd64')) return 'AMD64'
   return 'Unknown'
 }
+
+export function parseReleaseNotes(body: string): { en: string; zh: string } {
+  if (!body) return { en: '', zh: '' }
+
+  const separator = /---\s*\n/
+
+  // Try to find language headers
+  const enMatch = body.match(/##\s*English\s*\n([\s\S]*?)(?=---|$)/i)
+  const zhMatch = body.match(/##\s*中文\s*\n([\s\S]*?)(?=---|$)/i)
+
+  if (enMatch && zhMatch) {
+    return {
+      en: enMatch[1].trim(),
+      zh: zhMatch[1].trim(),
+    }
+  }
+
+  // Fallback: split by separator
+  const parts = body.split(separator)
+  if (parts.length >= 2) {
+    return {
+      en: parts[0].trim(),
+      zh: parts[1].trim(),
+    }
+  }
+
+  // No separator found, return as English
+  return {
+    en: body.trim(),
+    zh: '',
+  }
+}

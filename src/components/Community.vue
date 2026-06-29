@@ -1,9 +1,9 @@
 <template>
   <section class="community">
     <div class="community-content">
-      <h2 class="section-title">{{ t('community.title') }}</h2>
-      <p class="section-subtitle">{{ t('community.subtitle') }}</p>
-      <div class="community-links">
+      <h2 class="section-title" data-animate="fadeUp">{{ t('community.title') }}</h2>
+      <p class="section-subtitle" data-animate="fadeUp" data-delay="0.1">{{ t('community.subtitle') }}</p>
+      <div class="community-links" data-animate="fadeUp" data-delay="0.2">
         <a href="https://github.com/Abyss-PlayerEG/godot-gdpm" target="_blank" class="community-link">
           <Icon icon="ri:github-fill" width="20" height="20" />
           {{ t('community.github') }}
@@ -13,6 +13,7 @@
           {{ t('community.pypi') }}
         </a>
       </div>
+      <p class="footer-text">© 2026 playereg • GPL-3.0 License</p>
     </div>
   </section>
 </template>
@@ -26,8 +27,12 @@ const { t } = useI18n()
 
 <style scoped>
 .community {
-  padding: 100px 2rem;
-  background: #0B1120;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 2rem;
+  background: #0F172A;
 }
 
 .community-content {
@@ -77,5 +82,11 @@ const { t } = useI18n()
   border-color: rgba(71, 140, 191, 0.5);
   background: linear-gradient(135deg, rgba(71, 140, 191, 0.15) 0%, rgba(71, 140, 191, 0.05) 100%);
   transform: translateY(-2px);
+}
+
+.footer-text {
+  margin-top: 48px;
+  font-size: 13px;
+  color: #475569;
 }
 </style>

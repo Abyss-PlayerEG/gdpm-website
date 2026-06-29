@@ -1,11 +1,11 @@
 <template>
   <section id="quickstart" class="quickstart">
     <div class="quickstart-content">
-      <h2 class="section-title">{{ t('quickstart.title') }}</h2>
-      <p class="section-subtitle">{{ t('quickstart.subtitle') }}</p>
+      <h2 class="section-title" data-animate="fadeUp">{{ t('quickstart.title') }}</h2>
+      <p class="section-subtitle" data-animate="fadeUp" data-delay="0.1">{{ t('quickstart.subtitle') }}</p>
 
       <div class="steps">
-        <div class="step">
+        <div class="step" data-animate="fadeLeft" data-delay="0.2">
           <div class="step-number">1</div>
           <div class="step-content">
             <h3 class="step-title">{{ t('quickstart.step1Title') }}</h3>
@@ -18,7 +18,7 @@
           </div>
         </div>
 
-        <div class="step">
+        <div class="step" data-animate="fadeLeft" data-delay="0.35">
           <div class="step-number">2</div>
           <div class="step-content">
             <h3 class="step-title">{{ t('quickstart.step2Title') }}</h3>
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div class="step">
+        <div class="step" data-animate="fadeLeft" data-delay="0.5">
           <div class="step-number">3</div>
           <div class="step-content">
             <h3 class="step-title">{{ t('quickstart.step3Title') }}</h3>
@@ -54,7 +54,7 @@
         </div>
       </div>
 
-      <a href="https://abyss-playereg.github.io/godot-gdpm/" target="_blank" class="docs-link">
+      <a href="https://abyss-playereg.github.io/godot-gdpm/" target="_blank" class="docs-link" data-animate="fadeUp" data-delay="0.65">
         {{ t('quickstart.viewDocs') }}
         <Icon icon="ri:arrow-right-line" width="16" height="16" />
       </a>
@@ -88,8 +88,12 @@ const copyAdd = () => copy('gdpm add limbo-ai', copiedAdd)
 
 <style scoped>
 .quickstart {
-  padding: 100px 2rem;
-  background: #0B1120;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 2rem;
+  background: #0F172A;
 }
 
 .quickstart-content {
@@ -164,6 +168,7 @@ const copyAdd = () => copy('gdpm add limbo-ai', copiedAdd)
 .code-blocks {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -210,8 +215,50 @@ const copyAdd = () => copy('gdpm add limbo-ai', copiedAdd)
 }
 
 @media (max-width: 640px) {
+  .quickstart {
+    min-height: 100vh;
+    height: auto;
+    padding: 60px 1rem;
+  }
   .section-title {
-    font-size: 32px;
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .section-subtitle {
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+  .steps {
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .step {
+    gap: 12px;
+  }
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  .step-title {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .code-blocks {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .code-or {
+    padding-left: 4px;
+  }
+  .code-block {
+    width: 100%;
+    padding: 10px 12px;
+  }
+  .code-block code {
+    font-size: 12px;
+    word-break: break-all;
   }
 }
 </style>

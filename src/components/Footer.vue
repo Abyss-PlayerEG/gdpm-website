@@ -19,10 +19,7 @@ const { t } = useI18n()
 
 <style scoped>
 .footer {
-  padding: 0 2rem;
-  height: 64px;
-  background: #0B1120;
-  border-top: 1px solid rgba(51, 65, 85, 0.2);
+  display: none;
 }
 
 .footer-content {

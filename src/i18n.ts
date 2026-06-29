@@ -95,6 +95,7 @@ const messages = {
       downloads: 'Downloads',
       install: 'Installation',
       releaseNotes: 'Release Notes',
+      noTranslation: 'Chinese translation not available, showing English version.',
       viewOnGitHub: 'View on GitHub',
       viewOnPyPI: 'View on PyPI'
     }
@@ -193,6 +194,7 @@ const messages = {
       downloads: '下载',
       install: '安装',
       releaseNotes: '更新日志',
+      noTranslation: '暂无中文翻译，显示英文版本。',
       viewOnGitHub: '在 GitHub 查看',
       viewOnPyPI: '在 PyPI 查看'
     }

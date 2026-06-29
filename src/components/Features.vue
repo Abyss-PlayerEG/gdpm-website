@@ -1,10 +1,10 @@
 <template>
   <section id="features" class="features">
     <div class="features-content">
-      <h2 class="section-title">{{ t('features.title') }}</h2>
-      <p class="section-subtitle">{{ t('features.subtitle') }}</p>
+      <h2 class="section-title" data-animate="fadeUp">{{ t('features.title') }}</h2>
+      <p class="section-subtitle" data-animate="fadeUp" data-delay="0.1">{{ t('features.subtitle') }}</p>
       <div class="features-grid">
-        <div v-for="feature in features" :key="feature.key" class="feature-card">
+        <div v-for="(feature, index) in features" :key="feature.key" class="feature-card" data-animate="fadeUp" :data-delay="0.2 + index * 0.1">
           <div class="feature-icon">
             <Icon :icon="feature.icon" width="24" height="24" />
           </div>
@@ -32,8 +32,13 @@ const features = [
 
 <style scoped>
 .features {
-  padding: 100px 2rem;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 2rem;
   background: #0B1120;
+  overflow: hidden;
 }
 
 .features-content {
@@ -53,7 +58,7 @@ const features = [
 .section-subtitle {
   font-size: 18px;
   color: #64748B;
-  margin-bottom: 64px;
+  margin-bottom: 48px;
 }
 
 .features-grid {
@@ -113,11 +118,44 @@ const features = [
 }
 
 @media (max-width: 640px) {
-  .features-grid {
-    grid-template-columns: 1fr;
+  .features {
+    min-height: 100vh;
+    padding: 80px 0;
+  }
+  .features-content {
+    padding: 0 1rem;
   }
   .section-title {
     font-size: 32px;
+    margin-bottom: 12px;
+  }
+  .section-subtitle {
+    font-size: 16px;
+    margin-bottom: 40px;
+  }
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .feature-card {
+    min-height: auto;
+    padding: 20px 8px;
+    text-align: center;
+    border-radius: 14px;
+  }
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    margin: 0 auto 12px;
+  }
+  .feature-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0;
+  }
+  .feature-desc {
+    display: none;
   }
 }
 </style>
