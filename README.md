@@ -1,5 +1,44 @@
-# Vue 3 + TypeScript + Vite
+# GDPM Website
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Official website for [GDPM](https://github.com/Abyss-PlayerEG/godot-gdpm) - Godot Dependency Package Manager.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Tech Stack
+
+- **Vue 3** + **TypeScript** + **Vite**
+- **vue-router** — Routing
+- **vue-i18n** — Internationalization (EN/ZH)
+- **GSAP** — Animations
+- **@iconify/vue** — Icons
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start dev server
+pnpm dev
+
+# Build for production
+pnpm build
+```
+
+## Vue Project Manager (vuem)
+
+```bash
+# Install Python dependencies
+uv sync
+
+# Interactive menu
+uv run vuem
+
+# Commands
+uv run vuem build      # Build
+uv run vuem analyze    # Analyze bundle
+uv run vuem check      # Lint + typecheck
+uv run vuem version show  # Show version
+```
+
+## License
+
+GPL-3.0
