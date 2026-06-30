@@ -24,14 +24,18 @@ html {
   cursor: none;
 }
 
+.cursor-zoomed,
+.cursor-zoomed * {
+  cursor: auto !important;
+}
+
 a, button, input, textarea, select, [role="button"], .btn-primary, .btn-secondary, .nav-link, .lang-switcher, .nav-dot, .version-link, .community-link, .back-link, .copy-btn {
   cursor: none !important;
 }
 
-@media (pointer: coarse) {
-  html, a, button, input, textarea, select, [role="button"], .btn-primary, .btn-secondary, .nav-link, .lang-switcher, .nav-dot, .version-link, .community-link, .back-link, .copy-btn {
-    cursor: auto !important;
-  }
+.cursor-zoomed,
+.cursor-zoomed * {
+  cursor: auto !important;
 }
 
 html {

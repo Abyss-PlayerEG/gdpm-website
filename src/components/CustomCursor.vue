@@ -1,5 +1,5 @@
 <template>
-  <div ref="cursor" class="custom-cursor" :class="{ hover: isHover }">
+  <div ref="cursor" class="custom-cursor" :class="{ hover: isHover, hidden: isZoomed }">
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
   </div>
@@ -10,11 +10,24 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const cursor = ref<HTMLElement>()
 const isHover = ref(false)
+const isZoomed = ref(false)
+
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
 
 const handleMouseMove = (e: MouseEvent) => {
-  if (!cursor.value) return
+  if (!cursor.value || isZoomed.value) return
   cursor.value.style.left = `${e.clientX}px`
   cursor.value.style.top = `${e.clientY}px`
+}
+
+const checkZoom = () => {
+  if (!isSafari) return
+  const viewport = window.visualViewport
+  if (viewport) {
+    const zoomed = viewport.scale > 1.05
+    isZoomed.value = zoomed
+    document.documentElement.classList.toggle('cursor-zoomed', zoomed)
+  }
 }
 
 const isInteractive = (el: Element | null): boolean => {
@@ -33,15 +46,14 @@ const isInteractive = (el: Element | null): boolean => {
 }
 
 const handleMouseOver = (e: MouseEvent) => {
-  const target = e.target as Element
-  if (isInteractive(target) || target.closest('a, button, [role="button"], [data-cursor]')) {
+  if (isInteractive(e.target as Element) || (e.target as Element).closest?.('a, button, [role="button"], [data-cursor]')) {
     isHover.value = true
   }
 }
 
 const handleMouseOut = (e: MouseEvent) => {
   const related = e.relatedTarget as Element | null
-  if (!related || !isInteractive(related) && !related.closest?.('a, button, [role="button"], [data-cursor]')) {
+  if (!related || (!isInteractive(related) && !related.closest?.('a, button, [role="button"], [data-cursor]'))) {
     isHover.value = false
   }
 }
@@ -50,12 +62,22 @@ onMounted(() => {
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseover', handleMouseOver)
   document.addEventListener('mouseout', handleMouseOut)
+
+  if (isSafari) {
+    window.visualViewport?.addEventListener('scroll', checkZoom)
+    window.visualViewport?.addEventListener('resize', checkZoom)
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseover', handleMouseOver)
   document.removeEventListener('mouseout', handleMouseOut)
+
+  if (isSafari) {
+    window.visualViewport?.removeEventListener('scroll', checkZoom)
+    window.visualViewport?.removeEventListener('resize', checkZoom)
+  }
 })
 </script>
 
@@ -64,8 +86,15 @@ onUnmounted(() => {
   position: fixed;
   pointer-events: none;
   z-index: 2147483647;
+  top: 0;
+  left: 0;
   transform: translate(-50%, -50%);
   mix-blend-mode: difference;
+  transition: opacity 0.2s;
+}
+
+.custom-cursor.hidden {
+  opacity: 0;
 }
 
 .cursor-dot {
