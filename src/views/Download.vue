@@ -65,13 +65,11 @@
               </div>
               <div class="checksum-hash">
                 <code>{{ asset.digest ? asset.digest.replace('sha256:', '') : '-' }}</code>
-                <button
+                <CopyButton
                   v-if="asset.digest"
-                  class="copy-btn-sm"
-                  @click="copyHash(asset.digest.replace('sha256:', ''), asset.name)"
-                >
-                  <Icon :icon="copiedHash === asset.name ? 'ri:check-line' : 'ri:file-copy-line'" width="14" height="14" />
-                </button>
+                  :text="asset.digest.replace('sha256:', '')"
+                  :size="14"
+                />
               </div>
             </div>
           </div>
@@ -81,9 +79,7 @@
           <p class="section-title">{{ t('download.install') }}</p>
           <div class="install-code">
             <code>pip install godot-gdpm=={{ version }}</code>
-            <button class="copy-btn" @click="copyInstallCommand">
-              <Icon :icon="copied ? 'ri:check-line' : 'ri:file-copy-line'" width="16" height="16" />
-            </button>
+            <CopyButton :text="`pip install godot-gdpm==${version}`" :size="16" />
           </div>
         </div>
 
@@ -111,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
@@ -120,15 +116,14 @@ import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, parse
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
 import type { VersionType } from '../utils/version'
+import CopyButton from '../components/CopyButton.vue'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const version = route.params.version as string
-const copied = ref(false)
 
 const { release, assets, loading, error } = useReleaseDownload(version)
 const { versions } = useGitHubReleases()
-const copiedHash = ref('')
 
 const isLatest = computed(() => {
   // Find the latest non-prerelease version
@@ -164,18 +159,6 @@ const getPlatformIcon = (name: string): string => {
   if (name.includes('macos')) return 'ri:apple-fill'
   if (name.includes('windows')) return 'ri:windows-fill'
   return 'ic:baseline-download'
-}
-
-const copyInstallCommand = async () => {
-  await navigator.clipboard.writeText(`pip install godot-gdpm==${version}`)
-  copied.value = true
-  setTimeout(() => copied.value = false, 2000)
-}
-
-const copyHash = async (hash: string, name: string) => {
-  await navigator.clipboard.writeText(hash)
-  copiedHash.value = name
-  setTimeout(() => copiedHash.value = '', 2000)
 }
 </script>
 

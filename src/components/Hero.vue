@@ -10,13 +10,13 @@
           <Icon :icon="osIcon" width="18" height="18" />
           {{ t('hero.downloadGDPM') }}
         </a>
-        <router-link v-else :to="`/download/${latestStable}`" class="btn-secondary">
+        <router-link v-else :to="`/version/${latestStable}`" class="btn-secondary">
           <Icon icon="ic:baseline-download" width="18" height="18" />
           {{ t('hero.downloadGDPM') }}
         </router-link>
       </div>
       <div v-if="latestPreRelease" class="hero-pre-release" data-animate="fadeUp" data-delay="0.5">
-        <router-link :to="`/download/${latestPreRelease}`" class="pre-release-link">
+        <router-link :to="`/version/${latestPreRelease}`" class="pre-release-link">
           {{ t('hero.preRelease') }} v{{ latestPreRelease }}
         </router-link>
       </div>

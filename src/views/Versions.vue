@@ -30,7 +30,7 @@
             <router-link
               v-for="(version, index) in stableVersions"
               :key="version"
-              :to="`/download/${version}`"
+              :to="`/version/${version}`"
               class="version-row"
             >
               <div class="version-info">
@@ -53,7 +53,7 @@
             <router-link
               v-for="(version, index) in preReleaseVersions"
               :key="version"
-              :to="`/download/${version}`"
+              :to="`/version/${version}`"
               class="version-row"
             >
               <div class="version-info">

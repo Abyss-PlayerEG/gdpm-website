@@ -11,9 +11,7 @@
             <h3 class="step-title">{{ t('quickstart.step1Title') }}</h3>
             <div class="code-block">
               <code>pip install godot-gdpm</code>
-              <button class="copy-btn" @click="copyInstall">
-                <Icon :icon="copiedInstall ? 'ri:check-line' : 'ri:file-copy-line'" width="14" height="14" />
-              </button>
+              <CopyButton text="pip install godot-gdpm" :size="14" />
             </div>
           </div>
         </div>
@@ -25,16 +23,12 @@
             <div class="code-blocks">
               <div class="code-block">
                 <code>cd my-godot-project && gdpm init</code>
-                <button class="copy-btn" @click="copyInit">
-                  <Icon :icon="copiedInit ? 'ri:check-line' : 'ri:file-copy-line'" width="14" height="14" />
-                </button>
+                <CopyButton text="cd my-godot-project && gdpm init" :size="14" />
               </div>
               <span class="code-or">{{ t('quickstart.or') }}</span>
               <div class="code-block">
                 <code>gdpm create my-game</code>
-                <button class="copy-btn" @click="copyCreate">
-                  <Icon :icon="copiedCreate ? 'ri:check-line' : 'ri:file-copy-line'" width="14" height="14" />
-                </button>
+                <CopyButton text="gdpm create my-game" :size="14" />
               </div>
             </div>
           </div>
@@ -46,9 +40,7 @@
             <h3 class="step-title">{{ t('quickstart.step3Title') }}</h3>
             <div class="code-block">
               <code>gdpm add limbo-ai</code>
-              <button class="copy-btn" @click="copyAdd">
-                <Icon :icon="copiedAdd ? 'ri:check-line' : 'ri:file-copy-line'" width="14" height="14" />
-              </button>
+              <CopyButton text="gdpm add limbo-ai" :size="14" />
             </div>
           </div>
         </div>
@@ -63,27 +55,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
+import CopyButton from './CopyButton.vue'
 
 const { t } = useI18n()
-
-const copiedInstall = ref(false)
-const copiedInit = ref(false)
-const copiedCreate = ref(false)
-const copiedAdd = ref(false)
-
-const copy = async (text: string, ref: { value: boolean }) => {
-  await navigator.clipboard.writeText(text)
-  ref.value = true
-  setTimeout(() => ref.value = false, 2000)
-}
-
-const copyInstall = () => copy('pip install godot-gdpm', copiedInstall)
-const copyInit = () => copy('cd my-godot-project && gdpm init', copiedInit)
-const copyCreate = () => copy('gdpm create my-game', copiedCreate)
-const copyAdd = () => copy('gdpm add limbo-ai', copiedAdd)
 </script>
 
 <style scoped>
@@ -179,24 +155,9 @@ const copyAdd = () => copy('gdpm add limbo-ai', copiedAdd)
 }
 
 .code-block code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono Nerd Font', monospace;
   font-size: 14px;
   color: #93C5FD;
-}
-
-.copy-btn {
-  padding: 4px;
-  border-radius: 4px;
-  background: transparent;
-  border: none;
-  color: #64748B;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.copy-btn:hover {
-  color: #478CBF;
-  background: rgba(71, 140, 191, 0.1);
 }
 
 .docs-link {

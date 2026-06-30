@@ -14,7 +14,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
-FONTS_DIR = Path(__file__).parent.parent.parent / "src" / "assets" / "fonts"
+FONTS_DIR = Path(__file__).parent.parent.parent / "public" / "fonts"
 ORIGINAL_DIR = FONTS_DIR / "original"
 WOFF2_DIR = FONTS_DIR / "woff2"
 

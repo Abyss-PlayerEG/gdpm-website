@@ -103,6 +103,11 @@ const messages = {
       noTranslation: 'Chinese translation not available, showing English version.',
       viewOnGitHub: 'View on GitHub',
       viewOnPyPI: 'View on PyPI'
+    },
+    notFound: {
+      message: 'Page not found',
+      redirect: 'Redirecting in {seconds} seconds...',
+      goHome: 'Go Home'
     }
   },
   zh: {
@@ -207,6 +212,11 @@ const messages = {
       noTranslation: '暂无中文翻译，显示英文版本。',
       viewOnGitHub: '在 GitHub 查看',
       viewOnPyPI: '在 PyPI 查看'
+    },
+    notFound: {
+      message: '页面未找到',
+      redirect: '{seconds} 秒后返回首页...',
+      goHome: '回到首页'
     }
   }
 }

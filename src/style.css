@@ -1,6 +1,6 @@
 @font-face {
-  font-family: 'JetBrains Mono Nerd Font';
-  src: url('/fonts/JetBrainsMonoNerdFont-Regular-v1.2.woff2') format('woff2');
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/woff2/JetBrainsMono-Regular.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
@@ -33,7 +33,7 @@ body {
 }
 
 code, pre, .code-block code, .command-name, .version-tag, .checksum-name, .checksum-hash code {
-  font-family: 'JetBrains Mono Nerd Font', 'JetBrains Mono', monospace !important;
+  font-family: 'JetBrains Mono', monospace !important;
 }
 
 a {

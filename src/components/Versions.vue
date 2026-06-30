@@ -19,7 +19,7 @@
         <div class="version-cards">
           <router-link
             v-if="latestStable"
-            :to="`/download/${latestStable}`"
+            :to="`/version/${latestStable}`"
             class="version-card card-latest"
           >
             <span class="card-version">v{{ latestStable }}</span>
@@ -28,7 +28,7 @@
 
           <router-link
             v-if="latestPreRelease"
-            :to="`/download/${latestPreRelease}`"
+            :to="`/version/${latestPreRelease}`"
             class="version-card card-pre"
           >
             <span class="card-version">v{{ latestPreRelease }}</span>
@@ -36,7 +36,7 @@
           </router-link>
         </div>
 
-        <router-link to="/versions" class="view-all-link">
+        <router-link to="/version/list" class="view-all-link">
           {{ t('versions.viewAll') }}
           <Icon icon="ri:arrow-right-line" width="16" height="16" />
         </router-link>

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Header />
+    <Header v-if="showHeader" />
 
     <!-- Home page with full-page scroll -->
     <template v-if="isHome">
@@ -45,6 +45,7 @@ const route = useRoute()
 const scroller = ref<InstanceType<typeof FullPageScroll>>()
 
 const isHome = computed(() => route.path === '/')
+const showHeader = computed(() => route.name !== 'not-found' && route.name !== 'dev-404')
 
 const sections = [
   { id: 'hero' },

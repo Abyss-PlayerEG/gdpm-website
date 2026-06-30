@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Download from '../views/Download.vue'
 import Versions from '../views/Versions.vue'
+import NotFound from '../views/NotFound.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -12,15 +13,30 @@ const router = createRouter({
       component: Home
     },
     {
-      path: '/download/:version',
-      name: 'download',
+      path: '/version/:version',
+      name: 'version-detail',
       component: Download
     },
     {
-      path: '/versions',
-      name: 'versions',
+      path: '/version/list',
+      name: 'version-list',
       component: Versions
-    }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFound
+    },
+    ...(import.meta.env.DEV
+      ? [
+          {
+            path: '/dev-404',
+            name: 'dev-404',
+            component: NotFound,
+            props: { noRedirect: true }
+          }
+        ]
+      : [])
   ],
   scrollBehavior(to) {
     if (to.hash) {
