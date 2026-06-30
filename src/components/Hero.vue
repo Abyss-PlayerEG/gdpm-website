@@ -96,7 +96,7 @@ const scrollToQuickStart = () => {
   display: flex;
   gap: 16px;
   justify-content: center;
-  margin-bottom: 48px;
+  margin-bottom: 16px;
 }
 
 .btn-primary {

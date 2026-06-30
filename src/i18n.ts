@@ -16,7 +16,7 @@ const messages = {
       downloadLatest: 'Download',
       installCommand: 'pip install godot-gdpm',
       copied: 'Copied!',
-      preRelease: 'Latest pre-release:'
+      preRelease: 'Get latest pre-release:'
     },
     features: {
       title: 'Features',
@@ -118,7 +118,7 @@ const messages = {
       downloadLatest: '下载',
       installCommand: 'pip install godot-gdpm',
       copied: '已复制!',
-      preRelease: '最新预发布版本:'
+      preRelease: '获取最新预发布版本:'
     },
     features: {
       title: '特性',
