@@ -40,8 +40,8 @@ const toggleLang = () => {
   right: 0;
   z-index: 100;
   background: rgba(11, 17, 32, 0.6);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
