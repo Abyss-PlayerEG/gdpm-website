@@ -1,9 +1,11 @@
 <template>
   <div id="app">
+    <RouteLoading />
     <div class="bg-orbs">
       <div class="orb orb-1"></div>
       <div class="orb orb-2"></div>
     </div>
+    <div class="mobile-orb"></div>
     <Header v-if="showHeader" />
 
     <!-- Home page with full-page scroll -->
@@ -38,6 +40,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './components/Header.vue'
+import RouteLoading from './components/RouteLoading.vue'
 import FullPageScroll from './components/FullPageScroll.vue'
 import Hero from './components/Hero.vue'
 import Features from './components/Features.vue'
@@ -161,8 +164,27 @@ html, body {
   background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
 }
 
+.mobile-orb {
+  display: none;
+}
+
 @media (max-width: 640px) {
-  .orb-1 { width: 300px; height: 300px; }
-  .orb-2 { width: 250px; height: 250px; }
+  .bg-orbs {
+    display: none;
+  }
+  .mobile-orb {
+    display: block;
+    position: fixed;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(71, 140, 191, 0.3) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 </style>
