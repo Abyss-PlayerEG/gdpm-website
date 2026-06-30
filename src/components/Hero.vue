@@ -6,8 +6,13 @@
       <p class="hero-subtitle" data-animate="fadeUp" data-delay="0.3">{{ t('hero.subtitle') }}</p>
       <div class="hero-cta-row" data-animate="fadeUp" data-delay="0.4">
         <button class="btn-primary" @click="scrollToQuickStart">{{ t('hero.getStarted') }}</button>
-        <router-link :to="`/download/${latestStable}`" class="btn-secondary">
-          {{ t('hero.downloadLatest') }} v{{ latestStable }}
+        <a v-if="downloadUrl" :href="downloadUrl" class="btn-secondary" download>
+          <Icon :icon="osIcon" width="18" height="18" />
+          {{ t('hero.downloadGDPM') }}
+        </a>
+        <router-link v-else :to="`/download/${latestStable}`" class="btn-secondary">
+          <Icon icon="ic:baseline-download" width="18" height="18" />
+          {{ t('hero.downloadGDPM') }}
         </router-link>
       </div>
       <div v-if="latestPreRelease" class="hero-pre-release" data-animate="fadeUp" data-delay="0.5">
@@ -27,8 +32,10 @@ $ gdpm sync
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGitHubReleases } from '../composables/useGitHubReleases'
+import { Icon } from '@iconify/vue'
+import { useGitHubReleases, getReleaseByVersion } from '../composables/useGitHubReleases'
 import { getVersionType } from '../utils/version'
+import { getOS, getOSIcon } from '../utils/os'
 
 const emit = defineEmits<{
   (e: 'scroll-to', sectionId: string): void
@@ -43,6 +50,21 @@ const latestStable = computed(() => {
 
 const latestPreRelease = computed(() => {
   return versions.value.find(v => getVersionType(v) !== 'stable') || ''
+})
+
+const os = getOS()
+const osIcon = getOSIcon(os)
+
+const downloadUrl = computed(() => {
+  if (!latestStable.value) return null
+  if (os !== 'windows' && os !== 'macos' && os !== 'linux') return null
+
+  const release = getReleaseByVersion(latestStable.value)
+  if (!release) return null
+
+  const pattern = new RegExp(`gdpm_.*${os}.*\\.(tar\\.gz|zip)$`)
+  const asset = release.assets.find(a => pattern.test(a.name))
+  return asset?.browser_download_url || null
 })
 
 const scrollToQuickStart = () => {
@@ -119,6 +141,10 @@ const scrollToQuickStart = () => {
 }
 
 .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-width: 200px;
   padding: 14px 32px;
   border-radius: 8px;

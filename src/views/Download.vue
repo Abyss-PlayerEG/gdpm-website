@@ -1,10 +1,10 @@
 <template>
   <section class="download">
     <div class="download-content">
-      <router-link to="/" class="back-link">
+      <a @click.prevent="$router.back()" class="back-link">
         <Icon icon="ri:arrow-left-line" width="16" height="16" />
         {{ t('download.back') }}
-      </router-link>
+      </a>
 
       <div v-if="loading" class="loading">
         <Icon icon="ri:loader-4-line" width="32" height="32" class="spin" />
@@ -19,13 +19,15 @@
 
       <template v-else>
         <div class="version-header">
-          <h1 class="version-title">v{{ version }}</h1>
-          <div class="version-badges">
-            <span v-if="isLatest" class="version-badge badge-latest">Latest</span>
-            <span v-if="release!.prerelease" class="version-badge badge-prerelease">Pre-release</span>
-            <span v-for="tag in versionTags" :key="tag" class="version-badge" :class="getBadgeClass(tag)">
-              {{ tag.toUpperCase() }}
-            </span>
+          <div class="version-top">
+            <h1 class="version-title">v{{ version }}</h1>
+            <div class="version-badges">
+              <span v-if="isLatest" class="version-badge badge-latest">Latest</span>
+              <span v-if="release!.prerelease" class="version-badge badge-prerelease">Pre-release</span>
+              <span v-for="tag in versionTags" :key="tag" class="version-badge" :class="getBadgeClass(tag)">
+                {{ tag.toUpperCase() }}
+              </span>
+            </div>
           </div>
           <span class="version-date">{{ formatDate(release!.published_at) }}</span>
         </div>
@@ -57,8 +59,10 @@
           <p class="section-title">SHA256</p>
           <div class="checksum-list">
             <div v-for="asset in assets" :key="asset.name" class="checksum-item">
-              <Icon :icon="getPlatformIcon(asset.name)" width="16" height="16" class="checksum-icon" />
-              <span class="checksum-name">{{ asset.name }}</span>
+              <div class="checksum-header">
+                <Icon :icon="getPlatformIcon(asset.name)" width="16" height="16" class="checksum-icon" />
+                <span class="checksum-name">{{ asset.name }}</span>
+              </div>
               <div class="checksum-hash">
                 <code>{{ asset.digest ? asset.digest.replace('sha256:', '') : '-' }}</code>
                 <button
@@ -156,10 +160,10 @@ const hasTranslation = computed(() => {
 })
 
 const getPlatformIcon = (name: string): string => {
-  if (name.includes('linux')) return 'ri:terminal-box-fill'
+  if (name.includes('linux')) return 'devicon-plain:linux'
   if (name.includes('macos')) return 'ri:apple-fill'
   if (name.includes('windows')) return 'ri:windows-fill'
-  return 'ri:folder-zip-fill'
+  return 'ic:baseline-download'
 }
 
 const copyInstallCommand = async () => {
@@ -192,6 +196,7 @@ const copyHash = async (hash: string, name: string) => {
   gap: 8px;
   color: #94A3B8;
   text-decoration: none;
+  cursor: pointer;
   font-size: 14px;
   margin-bottom: 32px;
   transition: color 0.2s;
@@ -249,9 +254,15 @@ const copyHash = async (hash: string, name: string) => {
 
 .version-header {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.version-top {
+  display: flex;
   align-items: baseline;
   gap: 16px;
-  margin-bottom: 48px;
   flex-wrap: wrap;
 }
 
@@ -357,6 +368,12 @@ const copyHash = async (hash: string, name: string) => {
   align-items: center;
   justify-content: center;
   color: #478CBF;
+  flex-shrink: 0;
+}
+
+.asset-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .asset-info {
@@ -434,12 +451,18 @@ const copyHash = async (hash: string, name: string) => {
 
 .checksum-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px 16px;
   border-radius: 8px;
   background: rgba(30, 41, 59, 0.4);
   border: 1px solid rgba(51, 65, 85, 0.2);
+}
+
+.checksum-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .checksum-icon {
@@ -448,10 +471,10 @@ const copyHash = async (hash: string, name: string) => {
 }
 
 .checksum-name {
-  min-width: 280px;
   font-size: 13px;
   color: #94A3B8;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono Nerd Font', monospace;
+  word-break: break-all;
 }
 
 .checksum-hash {

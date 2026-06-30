@@ -15,6 +15,7 @@ const messages = {
       tagline: 'like',
       getStarted: 'Get Started',
       downloadLatest: 'Download',
+      downloadGDPM: 'Download',
       installCommand: 'pip install godot-gdpm',
       copied: 'Copied!',
       preRelease: 'Get latest pre-release:'
@@ -118,6 +119,7 @@ const messages = {
       tagline: '类似',
       getStarted: '快速开始',
       downloadLatest: '下载',
+      downloadGDPM: '下载',
       installCommand: 'pip install godot-gdpm',
       copied: '已复制!',
       preRelease: '获取最新预发布版本:'

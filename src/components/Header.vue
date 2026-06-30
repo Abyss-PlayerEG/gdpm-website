@@ -12,9 +12,10 @@
         <a href="https://pypi.org/project/godot-gdpm/" target="_blank" class="nav-link">{{ t('nav.pypi') }}</a>
       </nav>
       <div class="header-actions">
-        <div class="lang-switcher">
-          <button :class="{ active: locale === 'en' }" @click="locale = 'en'">EN</button>
-          <button :class="{ active: locale === 'zh' }" @click="locale = 'zh'">中文</button>
+        <div class="lang-switcher" @click="toggleLang">
+          <div class="lang-slider" :class="{ 'slide-right': locale === 'zh' }"></div>
+          <button :class="{ active: locale === 'en' }">EN</button>
+          <button :class="{ active: locale === 'zh' }">中文</button>
         </div>
       </div>
     </div>
@@ -25,6 +26,10 @@
 import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
+
+const toggleLang = () => {
+  locale.value = locale.value === 'en' ? 'zh' : 'en'
+}
 </script>
 
 <style scoped>
@@ -97,27 +102,43 @@ const { t, locale } = useI18n()
 }
 
 .lang-switcher {
+  position: relative;
   display: flex;
-  gap: 4px;
   padding: 4px;
   border-radius: 6px;
   background: rgba(30, 41, 59, 0.5);
+  cursor: pointer;
+}
+
+.lang-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  border-radius: 4px;
+  background: #478CBF;
+  transition: transform 0.3s ease;
+}
+
+.lang-slider.slide-right {
+  transform: translateX(100%);
 }
 
 .lang-switcher button {
-  padding: 4px 8px;
-  border-radius: 4px;
+  position: relative;
+  z-index: 1;
+  padding: 4px 12px;
   border: none;
   background: transparent;
   color: #94A3B8;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 
 .lang-switcher button.active {
-  background: #478CBF;
   color: #FFFFFF;
 }
 

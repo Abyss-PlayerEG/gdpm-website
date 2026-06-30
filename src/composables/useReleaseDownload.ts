@@ -1,4 +1,5 @@
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getReleaseByVersion, formatSize, formatDate, getPlatform, getArch } from './useGitHubReleases'
 
 interface GitHubAsset {
   name: string
@@ -18,72 +19,31 @@ interface GitHubRelease {
   assets: GitHubAsset[]
 }
 
-interface CacheData {
-  release: GitHubRelease
-  timestamp: number
-}
-
-const CACHE_PREFIX = 'gdpm_release_'
-const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
-
-function getCached(version: string): { release: GitHubRelease } | null {
-  try {
-    const raw = localStorage.getItem(CACHE_PREFIX + version)
-    if (!raw) return null
-    const data: CacheData = JSON.parse(raw)
-    if (Date.now() - data.timestamp > CACHE_DURATION) return null
-    return { release: data.release }
-  } catch {
-    return null
-  }
-}
-
-function setCache(version: string, release: GitHubRelease) {
-  try {
-    localStorage.setItem(CACHE_PREFIX + version, JSON.stringify({
-      release,
-      timestamp: Date.now()
-    }))
-  } catch {
-    // ignore
-  }
-}
-
 export function useReleaseDownload(version: string) {
   const release = ref<GitHubRelease | null>(null)
   const assets = ref<GitHubAsset[]>([])
   const loading = ref(true)
   const error = ref<string | null>(null)
 
-  const fetchRelease = async () => {
-    const cached = getCached(version)
-    if (cached) {
-      release.value = cached.release
-      const pattern = /^gdpm_.*\.(tar\.gz|zip)$/
-      assets.value = cached.release.assets.filter(asset => pattern.test(asset.name))
-      loading.value = false
-      return
-    }
-
+  const fetchRelease = () => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await fetch(
-        `https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases/tags/v${version}`
-      )
+      // Get release from shared cache
+      const data = getReleaseByVersion(version)
 
-      if (!response.ok) {
-        throw new Error('Release not found')
+      if (!data) {
+        error.value = 'Release not found'
+        loading.value = false
+        return
       }
 
-      const data: GitHubRelease = await response.json()
       release.value = data
 
+      // Filter assets: gdpm prefix + .tar.gz or .zip extension
       const pattern = /^gdpm_.*\.(tar\.gz|zip)$/
       assets.value = data.assets.filter(asset => pattern.test(asset.name))
-
-      setCache(version, data)
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Unknown error'
     } finally {
@@ -91,37 +51,12 @@ export function useReleaseDownload(version: string) {
     }
   }
 
-  fetchRelease()
+  onMounted(fetchRelease)
 
   return { release, assets, loading, error, refresh: fetchRelease }
 }
 
-export function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-export function getPlatform(name: string): string {
-  if (name.includes('linux')) return 'Linux'
-  if (name.includes('macos')) return 'macOS'
-  if (name.includes('windows')) return 'Windows'
-  return 'Unknown'
-}
-
-export function getArch(name: string): string {
-  if (name.includes('arm64')) return 'ARM64'
-  if (name.includes('amd64')) return 'AMD64'
-  return 'Unknown'
-}
+export { formatSize, formatDate, getPlatform, getArch }
 
 export function parseReleaseNotes(body: string): { en: string; zh: string } {
   if (!body) return { en: '', zh: '' }
