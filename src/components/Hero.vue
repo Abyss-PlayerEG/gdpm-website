@@ -3,12 +3,17 @@
     <div class="hero-content">
       <span class="hero-badge" data-animate="fadeUp" data-delay="0.1">v{{ latestStable }} • {{ t('hero.badgeLabel') }}</span>
       <h1 class="hero-title" data-animate="fadeUp" data-delay="0.2">{{ t('hero.title') }}</h1>
-      <p class="hero-subtitle" data-animate="fadeUp" data-delay="0.3" v-html="t('hero.subtitle').replace('\n', '<br>')"></p>
+      <p class="hero-subtitle" data-animate="fadeUp" data-delay="0.3">{{ t('hero.subtitle') }}</p>
       <div class="hero-cta-row" data-animate="fadeUp" data-delay="0.4">
         <button class="btn-primary" @click="scrollToQuickStart">{{ t('hero.getStarted') }}</button>
-        <button class="btn-secondary" @click="copyInstallCommand">
-          {{ copied ? t('hero.copied') : t('hero.installCommand') }}
-        </button>
+        <router-link :to="`/download/${latestStable}`" class="btn-secondary">
+          {{ t('hero.downloadLatest') }} v{{ latestStable }}
+        </router-link>
+      </div>
+      <div v-if="latestPreRelease" class="hero-pre-release" data-animate="fadeUp" data-delay="0.5">
+        <router-link :to="`/download/${latestPreRelease}`" class="pre-release-link">
+          {{ t('hero.preRelease') }} v{{ latestPreRelease }}
+        </router-link>
       </div>
       <div class="code-block">
         <pre><code>$ gdpm add limbo-ai
@@ -20,7 +25,7 @@ $ gdpm sync
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType } from '../utils/version'
@@ -31,17 +36,14 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { versions } = useGitHubReleases()
-const copied = ref(false)
 
 const latestStable = computed(() => {
   return versions.value.find(v => getVersionType(v) === 'stable') || versions.value[0] || ''
 })
 
-const copyInstallCommand = async () => {
-  await navigator.clipboard.writeText('pip install godot-gdpm')
-  copied.value = true
-  setTimeout(() => copied.value = false, 2000)
-}
+const latestPreRelease = computed(() => {
+  return versions.value.find(v => getVersionType(v) !== 'stable') || ''
+})
 
 const scrollToQuickStart = () => {
   emit('scroll-to', 'quickstart')
@@ -98,7 +100,7 @@ const scrollToQuickStart = () => {
 }
 
 .btn-primary {
-  min-width: 180px;
+  min-width: 200px;
   padding: 14px 32px;
   border-radius: 8px;
   border: none;
@@ -108,6 +110,7 @@ const scrollToQuickStart = () => {
   font-weight: 600;
   cursor: pointer;
   text-align: center;
+  text-decoration: none;
   transition: background 0.2s;
 }
 
@@ -116,6 +119,7 @@ const scrollToQuickStart = () => {
 }
 
 .btn-secondary {
+  min-width: 200px;
   padding: 14px 32px;
   border-radius: 8px;
   background: transparent;
@@ -123,6 +127,8 @@ const scrollToQuickStart = () => {
   color: #478CBF;
   font-size: 16px;
   font-weight: 500;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -130,6 +136,22 @@ const scrollToQuickStart = () => {
 .btn-secondary:hover {
   border-color: #478CBF;
   background: rgba(71, 140, 191, 0.1);
+}
+
+.hero-pre-release {
+  margin-top: 12px;
+  margin-bottom: 32px;
+}
+
+.pre-release-link {
+  font-size: 13px;
+  color: #64748B;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.pre-release-link:hover {
+  color: #ED8936;
 }
 
 .code-block {

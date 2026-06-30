@@ -10,10 +10,13 @@ const messages = {
     hero: {
       badgeLabel: 'Open Source',
       title: 'GDPM',
-      subtitle: 'A dependency package manager for Godot plugins\nlike uv / npm / cargo',
+      subtitle: 'Godot Dependency Package Manager',
+      tagline: 'like',
       getStarted: 'Get Started',
+      downloadLatest: 'Download',
       installCommand: 'pip install godot-gdpm',
-      copied: 'Copied!'
+      copied: 'Copied!',
+      preRelease: 'Latest pre-release:'
     },
     features: {
       title: 'Features',
@@ -109,10 +112,13 @@ const messages = {
     hero: {
       badgeLabel: '开源',
       title: 'GDPM',
-      subtitle: 'Godot 插件的依赖包管理器\n类似 uv / npm / cargo',
+      subtitle: 'Godot 依赖包管理器',
+      tagline: '类似',
       getStarted: '快速开始',
+      downloadLatest: '下载',
       installCommand: 'pip install godot-gdpm',
-      copied: '已复制!'
+      copied: '已复制!',
+      preRelease: '最新预发布版本:'
     },
     features: {
       title: '特性',

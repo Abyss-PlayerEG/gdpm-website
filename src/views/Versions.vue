@@ -19,28 +19,59 @@
         <button @click="refresh" class="retry-btn">{{ t('versions.retry') }}</button>
       </div>
 
-      <div v-else class="versions-list">
-        <router-link
-          v-for="(version, index) in versions"
-          :key="version"
-          :to="`/download/${version}`"
-          class="version-row"
-        >
-          <div class="version-info">
-            <span class="version-tag">v{{ version }}</span>
-            <div class="version-badges">
-              <span v-if="isLatestStable(version, index)" class="version-badge badge-latest">Latest</span>
-              <span v-else-if="isPreRelease(version)" class="version-badge badge-prerelease">Pre-release</span>
-            </div>
+      <div v-else class="versions-grid">
+        <!-- Stable versions -->
+        <div class="versions-column">
+          <div class="column-header">
+            <Icon icon="ri:checkbox-circle-fill" width="18" height="18" class="icon-stable" />
+            <span>Stable</span>
           </div>
-          <Icon icon="ri:arrow-right-s-line" width="20" height="20" class="version-arrow" />
-        </router-link>
+          <div class="version-list">
+            <router-link
+              v-for="(version, index) in stableVersions"
+              :key="version"
+              :to="`/download/${version}`"
+              class="version-row"
+            >
+              <div class="version-info">
+                <span class="version-tag">v{{ version }}</span>
+                <span v-if="index === 0" class="version-badge badge-latest">Latest</span>
+              </div>
+              <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
+            </router-link>
+            <div v-if="!stableVersions.length" class="empty">No stable releases</div>
+          </div>
+        </div>
+
+        <!-- Pre-release versions -->
+        <div class="versions-column">
+          <div class="column-header">
+            <Icon icon="ri:flask-fill" width="18" height="18" class="icon-pre" />
+            <span>Pre-release</span>
+          </div>
+          <div class="version-list">
+            <router-link
+              v-for="(version, index) in preReleaseVersions"
+              :key="version"
+              :to="`/download/${version}`"
+              class="version-row"
+            >
+              <div class="version-info">
+                <span class="version-tag">v{{ version }}</span>
+                <span v-if="index === 0" class="version-badge badge-pre">Pre-release</span>
+              </div>
+              <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
+            </router-link>
+            <div v-if="!preReleaseVersions.length" class="empty">No pre-releases</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
@@ -49,27 +80,24 @@ import { getVersionType } from '../utils/version'
 const { t } = useI18n()
 const { versions, loading, error, refresh } = useGitHubReleases()
 
-function isLatestStable(version: string, index: number): boolean {
-  if (getVersionType(version) !== 'stable') return false
-  for (let i = 0; i < index; i++) {
-    if (getVersionType(versions.value[i]) === 'stable') return false
-  }
-  return true
-}
+const stableVersions = computed(() =>
+  versions.value.filter(v => getVersionType(v) === 'stable')
+)
 
-function isPreRelease(version: string): boolean {
-  return getVersionType(version) !== 'stable'
-}
+const preReleaseVersions = computed(() =>
+  versions.value.filter(v => getVersionType(v) !== 'stable')
+)
 </script>
 
 <style scoped>
 .versions-page {
   min-height: 100vh;
   padding: 100px 2rem 60px;
+  background: #0B1120;
 }
 
 .versions-content {
-  max-width: 700px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -142,50 +170,73 @@ function isPreRelease(version: string): boolean {
   color: #FFFFFF;
 }
 
-.versions-list {
+.versions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.versions-column {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.column-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.icon-stable {
+  color: #48BB78;
+}
+
+.icon-pre {
+  color: #ED8936;
+}
+
+.version-list {
+  padding: 8px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .version-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
-  border: 1px solid rgba(51, 65, 85, 0.3);
+  padding: 12px 16px;
+  border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .version-row:hover {
-  border-color: rgba(71, 140, 191, 0.4);
-  background: linear-gradient(135deg, rgba(71, 140, 191, 0.1) 0%, rgba(71, 140, 191, 0.05) 100%);
+  background: rgba(71, 140, 191, 0.1);
+}
+
+.version-tag {
+  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-size: 14px;
+  color: #E2E8F0;
 }
 
 .version-info {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.version-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 15px;
-  font-weight: 500;
-  color: #FFFFFF;
-}
-
-.version-badges {
-  display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .version-badge {
-  padding: 3px 10px;
-  border-radius: 6px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -196,7 +247,7 @@ function isPreRelease(version: string): boolean {
   color: #478CBF;
 }
 
-.badge-prerelease {
+.badge-pre {
   background: rgba(237, 137, 54, 0.2);
   color: #ED8936;
 }
@@ -210,9 +261,19 @@ function isPreRelease(version: string): boolean {
   color: #94A3B8;
 }
 
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: #475569;
+  font-size: 14px;
+}
+
 @media (max-width: 640px) {
   .page-title {
-    font-size: 32px;
+    font-size: 28px;
+  }
+  .versions-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

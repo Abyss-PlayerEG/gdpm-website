@@ -19,6 +19,8 @@ packages = ["scripts/vuem"]
 
 [dependency-groups]
 dev = [
+    "brotli>=1.2.0",
+    "fonttools>=4.63.0",
     "rich>=15.0.0",
     "typer>=0.26.8",
 ]
