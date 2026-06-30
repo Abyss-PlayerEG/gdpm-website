@@ -62,21 +62,21 @@ export function useDevtoolsDetector() {
   }
 
   const detect = () => {
+    // Skip if page is zoomed
+    if (Math.abs(window.devicePixelRatio - 1) > 0.1) return
+
+    // Method: debugger timing
     const start = performance.now()
     debugger
     const end = performance.now()
     if (end - start > 100) {
       showRecruitModal()
-      return
-    }
-
-    const threshold = 200
-    if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
-      showRecruitModal()
     }
   }
 
   const startDetection = () => {
+    // Skip on touch devices (mobile/tablet)
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
     setInterval(detect, 3000)
   }
 
