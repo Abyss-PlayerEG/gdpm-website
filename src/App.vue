@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <RouteLoading />
+    <CircleTransition />
     <div class="bg-orbs">
       <div class="orb orb-1"></div>
       <div class="orb orb-2"></div>
@@ -40,7 +40,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './components/Header.vue'
-import RouteLoading from './components/RouteLoading.vue'
+import CircleTransition from './components/CircleTransition.vue'
 import FullPageScroll from './components/FullPageScroll.vue'
 import Hero from './components/Hero.vue'
 import Features from './components/Features.vue'
