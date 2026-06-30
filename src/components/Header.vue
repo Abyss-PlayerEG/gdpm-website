@@ -39,9 +39,10 @@ const toggleLang = () => {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(11, 17, 32, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+  background: rgba(11, 17, 32, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .header-content {

@@ -140,7 +140,7 @@ onUnmounted(() => {
   container.value?.removeEventListener('scroll', handleScroll)
 })
 
-defineExpose({ scrollTo, scrollToSection, activeIndex })
+defineExpose({ scrollTo, scrollToSection, activeIndex, scrollProgress })
 </script>
 
 <style scoped>

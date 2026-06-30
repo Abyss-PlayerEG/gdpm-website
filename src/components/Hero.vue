@@ -79,7 +79,7 @@ const scrollToQuickStart = () => {
   align-items: center;
   justify-content: center;
   padding: 80px 2rem 40px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(71, 140, 191, 0.15) 0%, transparent 50%);
+  position: relative;
 }
 
 .hero-content {
