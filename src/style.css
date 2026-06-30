@@ -12,6 +12,20 @@
 }
 
 html {
+  cursor: none;
+}
+
+a, button, input, textarea, select, [role="button"], .btn-primary, .btn-secondary, .nav-link, .lang-switcher, .nav-dot, .version-link, .community-link, .back-link, .copy-btn {
+  cursor: none !important;
+}
+
+@media (pointer: coarse) {
+  html, a, button, input, textarea, select, [role="button"], .btn-primary, .btn-secondary, .nav-link, .lang-switcher, .nav-dot, .version-link, .community-link, .back-link, .copy-btn {
+    cursor: auto !important;
+  }
+}
+
+html {
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;

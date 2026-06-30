@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <CustomCursor />
     <CircleTransition />
     <div class="bg-orbs">
       <div class="orb orb-1"></div>
@@ -41,6 +42,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from './components/Header.vue'
 import CircleTransition from './components/CircleTransition.vue'
+import CustomCursor from './components/CustomCursor.vue'
 import FullPageScroll from './components/FullPageScroll.vue'
 import Hero from './components/Hero.vue'
 import Features from './components/Features.vue'
