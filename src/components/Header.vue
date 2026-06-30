@@ -6,9 +6,10 @@
         <span class="logo-text">GDPM</span>
       </router-link>
       <nav class="nav-links">
-        <a href="#features" class="nav-link">{{ t('nav.features') }}</a>
-        <a href="#installation" class="nav-link">{{ t('nav.docs') }}</a>
+        <a href="https://abyss-playereg.github.io/godot-gdpm/" target="_blank" class="nav-link">{{ t('nav.docs') }}</a>
+        <router-link to="/versions" class="nav-link">{{ t('nav.versions') }}</router-link>
         <a href="https://github.com/Abyss-PlayerEG/godot-gdpm" target="_blank" class="nav-link">{{ t('nav.github') }}</a>
+        <a href="https://pypi.org/project/godot-gdpm/" target="_blank" class="nav-link">{{ t('nav.pypi') }}</a>
       </nav>
       <div class="header-actions">
         <div class="lang-switcher">

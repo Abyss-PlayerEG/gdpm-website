@@ -3,9 +3,10 @@ import { createI18n } from 'vue-i18n'
 const messages = {
   en: {
     nav: {
-      features: 'Features',
       docs: 'Docs',
-      github: 'GitHub'
+      versions: 'All Versions',
+      github: 'GitHub',
+      pypi: 'PyPI'
     },
     hero: {
       badgeLabel: 'Open Source',
@@ -105,9 +106,10 @@ const messages = {
   },
   zh: {
     nav: {
-      features: '特性',
       docs: '文档',
-      github: 'GitHub'
+      versions: '全部版本',
+      github: 'GitHub',
+      pypi: 'PyPI'
     },
     hero: {
       badgeLabel: '开源',
