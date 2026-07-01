@@ -2,7 +2,6 @@
   <div v-if="active" class="circle-transition" :class="{ expanding: expanding, shrinking: shrinking }">
     <div class="circle" :style="circleStyle">
       <div class="transition-content" :class="{ visible: expanding && !shrinking }">
-<!--        <img src="/icon.png" alt="GDPM" class="transition-logo">-->
         <div class="spinner"></div>
       </div>
     </div>

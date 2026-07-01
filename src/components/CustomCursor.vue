@@ -20,6 +20,16 @@ const handleMouseMove = (e: MouseEvent) => {
   cursor.value.style.top = `${e.clientY}px`
 }
 
+const handleMouseDown = () => {
+  if (!cursor.value) return
+  // Create a ripple element
+  const ripple = document.createElement('div')
+  ripple.className = 'cursor-ripple'
+  cursor.value.appendChild(ripple)
+  // Remove after animation
+  setTimeout(() => ripple.remove(), 600)
+}
+
 const checkZoom = () => {
   if (!isSafari) return
   const viewport = window.visualViewport
@@ -62,6 +72,7 @@ onMounted(() => {
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseover', handleMouseOver)
   document.addEventListener('mouseout', handleMouseOut)
+  document.addEventListener('mousedown', handleMouseDown)
 
   if (isSafari) {
     window.visualViewport?.addEventListener('scroll', checkZoom)
@@ -73,6 +84,7 @@ onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseover', handleMouseOver)
   document.removeEventListener('mouseout', handleMouseOut)
+  document.removeEventListener('mousedown', handleMouseDown)
 
   if (isSafari) {
     window.visualViewport?.removeEventListener('scroll', checkZoom)
@@ -121,6 +133,20 @@ onUnmounted(() => {
   transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
 }
 
+.cursor-click-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Hover state */
 .custom-cursor.hover .cursor-dot {
   width: 16px;
   height: 16px;
@@ -130,6 +156,33 @@ onUnmounted(() => {
   width: 64px;
   height: 64px;
   border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Click ripple */
+:deep(.cursor-ripple) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  animation: clickRipple 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes clickRipple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+  }
 }
 
 @media (pointer: coarse) {
