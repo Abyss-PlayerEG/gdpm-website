@@ -10,4 +10,7 @@ if (!import.meta.env.DEV){
     useBanner()
 }
 
-createApp(App).use(router).use(i18n).mount('#app')
+createApp(App)
+    .use(router)
+    .use(i18n)
+    .mount('#app')
