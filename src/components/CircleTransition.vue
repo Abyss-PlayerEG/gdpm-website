@@ -26,25 +26,24 @@ const circleStyle = computed(() => ({
 }))
 
 onMounted(() => {
-  router.beforeEach((to, from, next) => {
-    if (to.path === from.path) {
-      next()
-      return
-    }
+  router.beforeEach((to, from) => {
+    if (to.path === from.path) return
 
-    active.value = true
-    expanding.value = true
-
-    setTimeout(() => {
-      next()
-      expanding.value = false
-      shrinking.value = true
+    return new Promise<boolean>((resolve) => {
+      active.value = true
+      expanding.value = true
 
       setTimeout(() => {
-        shrinking.value = false
-        active.value = false
+        resolve(true)
+        expanding.value = false
+        shrinking.value = true
+
+        setTimeout(() => {
+          shrinking.value = false
+          active.value = false
+        }, 600)
       }, 600)
-    }, 600)
+    })
   })
 
   document.addEventListener('click', (e) => {
