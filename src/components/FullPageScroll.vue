@@ -149,6 +149,12 @@ defineExpose({ scrollTo, scrollToSection, activeIndex, scrollProgress })
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.fullpage::-webkit-scrollbar {
+  display: none;
 }
 
 .fullpage-section {
