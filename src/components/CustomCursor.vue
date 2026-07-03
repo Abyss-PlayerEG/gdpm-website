@@ -116,8 +116,8 @@ onUnmounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #478CBF;
-  box-shadow: 0 0 10px rgba(71, 140, 191, 0.6);
+  background: #FFFFFF;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
   transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -129,7 +129,7 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1.5px solid rgba(71, 140, 191, 0.4);
+  border: 1.5px solid #FFFFFF;
   transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
 }
 
@@ -137,13 +137,13 @@ onUnmounted(() => {
 .custom-cursor.hover .cursor-dot {
   width: 16px;
   height: 16px;
-  box-shadow: 0 0 20px rgba(71, 140, 191, 0.8);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
 }
 
 .custom-cursor.hover .cursor-ring {
   width: 64px;
   height: 64px;
-  border-color: rgba(71, 140, 191, 0.8);
+  border-color: #FFFFFF;
 }
 
 /* Click ripple */
@@ -155,7 +155,7 @@ onUnmounted(() => {
   width: 0;
   height: 0;
   border-radius: 50%;
-  border: 2px solid rgba(71, 140, 191, 0.6);
+  border: 2px solid #FFFFFF;
   animation: clickRipple 0.6s ease-out forwards;
   pointer-events: none;
 }
