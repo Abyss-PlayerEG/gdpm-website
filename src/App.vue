@@ -83,8 +83,8 @@ const initLenis = () => {
   }
   lenis = new Lenis({
     smoothWheel: true,
-    lerp: 0.08,
-    duration: 1.5,
+    lerp: 0.15,
+    duration: 0.8,
     easing: (t) => 1 - Math.pow(1 - t, 4),
   })
   rafId = requestAnimationFrame(raf)
