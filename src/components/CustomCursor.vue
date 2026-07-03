@@ -1,5 +1,10 @@
 <template>
-  <div ref="cursor" class="custom-cursor" :class="{ hover: isHover, hidden: isZoomed }">
+  <div
+    ref="cursor"
+    class="custom-cursor"
+    :class="{ hover: isHover, hidden: isZoomed }"
+    :style="cursorStyle"
+  >
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
   </div>
@@ -11,22 +16,79 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const cursor = ref<HTMLElement>()
 const isHover = ref(false)
 const isZoomed = ref(false)
+const cursorStyle = ref<Record<string, string>>({})
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
 
+let lastX = 0
+let lastY = 0
+let lastTime = 0
+let velocityX = 0
+let velocityY = 0
+let rafId: number | null = null
+
 const handleMouseMove = (e: MouseEvent) => {
   if (!cursor.value || isZoomed.value) return
+
+  const now = performance.now()
+  const dt = now - lastTime
+
+  if (dt > 0) {
+    velocityX = (e.clientX - lastX) / dt
+    velocityY = (e.clientY - lastY) / dt
+  }
+
+  lastX = e.clientX
+  lastY = e.clientY
+  lastTime = now
+
   cursor.value.style.left = `${e.clientX}px`
   cursor.value.style.top = `${e.clientY}px`
+
+  if (!rafId) {
+    rafId = requestAnimationFrame(updateBlur)
+  }
+}
+
+const updateBlur = () => {
+  if (!cursor.value) {
+    rafId = null
+    return
+  }
+
+  const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY)
+  const angle = Math.atan2(velocityY, velocityX)
+
+  // Apply directional blur effect
+  const blurAmount = Math.min(speed * 2, 8)
+  const stretchX = 1 + Math.min(speed * 0.1, 0.5)
+  const stretchY = 1 + Math.min(speed * 0.02, 0.1)
+
+  cursorStyle.value = {
+    filter: `blur(${blurAmount}px)`,
+    transform: `translate(-50%, -50%) rotate(${angle}rad) scaleX(${stretchX}) scaleY(${stretchY})`,
+  }
+
+  // Decay velocity
+  velocityX *= 0.8
+  velocityY *= 0.8
+
+  if (Math.abs(velocityX) > 0.01 || Math.abs(velocityY) > 0.01) {
+    rafId = requestAnimationFrame(updateBlur)
+  } else {
+    cursorStyle.value = {
+      filter: 'none',
+      transform: 'translate(-50%, -50%)',
+    }
+    rafId = null
+  }
 }
 
 const handleMouseDown = () => {
   if (!cursor.value) return
-  // Create a ripple element
   const ripple = document.createElement('div')
   ripple.className = 'cursor-ripple'
   cursor.value.appendChild(ripple)
-  // Remove after animation
   setTimeout(() => ripple.remove(), 600)
 }
 
@@ -89,6 +151,10 @@ onUnmounted(() => {
   if (isSafari) {
     window.visualViewport?.removeEventListener('scroll', checkZoom)
     window.visualViewport?.removeEventListener('resize', checkZoom)
+  }
+
+  if (rafId) {
+    cancelAnimationFrame(rafId)
   }
 })
 </script>
