@@ -101,7 +101,6 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   transform: translate(-50%, -50%);
-  mix-blend-mode: difference;
   transition: opacity 0.2s;
 }
 
@@ -117,8 +116,9 @@ onUnmounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #FFFFFF;
-  transition: width 0.2s ease, height 0.2s ease;
+  background: #478CBF;
+  box-shadow: 0 0 10px rgba(71, 140, 191, 0.6);
+  transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cursor-ring {
@@ -129,33 +129,21 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1.5px solid rgba(71, 140, 191, 0.4);
   transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
-}
-
-.cursor-click-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* Hover state */
 .custom-cursor.hover .cursor-dot {
   width: 16px;
   height: 16px;
+  box-shadow: 0 0 20px rgba(71, 140, 191, 0.8);
 }
 
 .custom-cursor.hover .cursor-ring {
   width: 64px;
   height: 64px;
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(71, 140, 191, 0.8);
 }
 
 /* Click ripple */
@@ -167,7 +155,7 @@ onUnmounted(() => {
   width: 0;
   height: 0;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(71, 140, 191, 0.6);
   animation: clickRipple 0.6s ease-out forwards;
   pointer-events: none;
 }
