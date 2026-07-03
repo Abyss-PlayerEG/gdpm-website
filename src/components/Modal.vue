@@ -10,6 +10,7 @@
             </button>
           </div>
           <div class="modal-body">
+            <!-- eslint-disable vue/no-v-html -->
             <slot><div v-html="content"></div></slot>
           </div>
           <div v-if="$slots.footer" class="modal-footer">
@@ -34,6 +35,8 @@ const props = withDefaults(defineProps<{
   maskClosable?: boolean
 }>(), {
   visible: false,
+  title: '',
+  content: '',
   width: '480px',
   closable: true,
   maskClosable: true,

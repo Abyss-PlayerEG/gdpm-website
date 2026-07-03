@@ -88,6 +88,7 @@
           <div v-if="!hasTranslation && locale === 'zh'" class="translation-notice">
             {{ t('download.noTranslation') }}
           </div>
+          <!-- eslint-disable vue/no-v-html -->
           <div class="release-notes markdown-body" v-html="renderedNotes"></div>
         </div>
 
