@@ -52,6 +52,37 @@ function setCache(releases: GitHubRelease[]) {
 // Shared cache for all composables
 let cachedReleases: GitHubRelease[] | null = null
 
+export async function fetchAndCacheReleases(): Promise<void> {
+  // Check memory cache first
+  if (cachedReleases) return
+
+  // Check localStorage cache
+  const cached = getCached()
+  if (cached) {
+    cachedReleases = cached
+    return
+  }
+
+  try {
+    const response = await fetch(
+      'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases?per_page=100'
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch releases')
+    }
+
+    const releases: GitHubRelease[] = await response.json()
+    cachedReleases = releases
+
+    // Cache the result
+    setCache(releases)
+  } catch (e) {
+    console.error('Failed to fetch GitHub releases:', e)
+    throw e
+  }
+}
+
 export function useGitHubReleases() {
   const versions = ref<string[]>([])
   const loading = ref(true)

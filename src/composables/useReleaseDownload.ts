@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue'
-import { getReleaseByVersion, formatSize, formatDate, getPlatform, getArch } from './useGitHubReleases'
+import { getReleaseByVersion, formatSize, formatDate, getPlatform, getArch, fetchAndCacheReleases } from './useGitHubReleases'
 
 interface GitHubAsset {
   name: string
@@ -25,13 +25,19 @@ export function useReleaseDownload(version: string) {
   const loading = ref(true)
   const error = ref<string | null>(null)
 
-  const fetchRelease = () => {
+  const fetchRelease = async () => {
     try {
       loading.value = true
       error.value = null
 
-      // Get release from shared cache
-      const data = getReleaseByVersion(version)
+      // Try to get from cache first
+      let data = getReleaseByVersion(version)
+
+      // If not cached, fetch all releases
+      if (!data) {
+        await fetchAndCacheReleases()
+        data = getReleaseByVersion(version)
+      }
 
       if (!data) {
         error.value = 'Release not found'
