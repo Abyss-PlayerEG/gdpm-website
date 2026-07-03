@@ -6,9 +6,7 @@ import { useBanner } from './composables/useBanner'
 import './style.css'
 
 // Print banner (language-aware)
-if (!import.meta.env.DEV){
-    useBanner()
-}
+useBanner()
 
 createApp(App)
     .use(router)
