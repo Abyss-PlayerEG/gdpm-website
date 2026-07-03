@@ -1,16 +1,13 @@
-import NotFound from '../views/NotFound.vue'
-import ModalDemo from '../views/demo/ModalDemo.vue'
-
 export const devRoutes = [
   {
     path: '/dev-404',
     name: 'dev-404',
-    component: NotFound,
+    component: () => import('../views/NotFound.vue'),
     props: { noRedirect: true }
   },
   {
     path: '/demo/modal',
     name: 'demo-modal',
-    component: ModalDemo
+    component: () => import('../views/demo/ModalDemo.vue')
   }
 ]

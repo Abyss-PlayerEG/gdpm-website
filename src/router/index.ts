@@ -1,8 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import Download from '../views/Download.vue'
-import Versions from '../views/Versions.vue'
-import NotFound from '../views/NotFound.vue'
 import { devRoutes } from './dev'
 
 const router = createRouter({
@@ -11,22 +7,22 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: () => import('../views/Home.vue')
     },
     {
       path: '/version/:version',
       name: 'version-detail',
-      component: Download
+      component: () => import('../views/Download.vue')
     },
     {
       path: '/version/list',
       name: 'version-list',
-      component: Versions
+      component: () => import('../views/Versions.vue')
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
-      component: NotFound
+      component: () => import('../views/NotFound.vue')
     },
     // Developer routes (dev only)
     ...(import.meta.env.DEV ? devRoutes : [])
