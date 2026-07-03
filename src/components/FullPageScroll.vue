@@ -1,20 +1,25 @@
 <template>
   <div ref="container" class="fullpage">
-    <section
-      v-for="section in sections"
-      :key="section.id"
-      class="fullpage-section"
+    <div
+      ref="wrapper"
+      class="fullpage-wrapper"
+      :style="wrapperStyle"
     >
-      <slot :name="section.id" />
-    </section>
+      <section
+        v-for="section in sections"
+        :key="section.id"
+        class="fullpage-section"
+      >
+        <slot :name="section.id" />
+      </section>
+    </div>
 
     <nav class="fullpage-nav">
       <button
         v-for="(section, index) in sections"
         :key="section.id"
         class="nav-dot"
-        :class="{ active: activeIndex === index }"
-        :style="getDotStyle(index)"
+        :class="{ active: currentIndex === index }"
         @click="scrollTo(index)"
       />
     </nav>
@@ -22,105 +27,77 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 interface Section {
   id: string
 }
 
-const props = defineProps<{
+interface Props {
   sections: Section[]
-}>()
+  duration?: number
+}
 
-const activeIndex = ref(0)
+const props = withDefaults(defineProps<Props>(), {
+  duration: 600,
+})
+
+const currentIndex = ref(0)
 const scrollProgress = ref(0)
 const container = ref<HTMLElement>()
 
-let isScrolling = false
+let isAnimating = false
+let startY = 0
+let currentY = 0
+let isDragging = false
+let animationFrame: number | null = null
+let animateStartTime = 0
+let animateFrom = 0
+let animateTo = 0
+let lastScrollTime = 0
 
-const getDotStyle = (index: number) => {
-  const progress = scrollProgress.value
-  const current = activeIndex.value
+const COOLDOWN = 800
 
-  // Current dot - fade out as scrolling away
-  if (index === current) {
-    const opacity = 1 - (progress % 1)
-    const scale = 1.2 - 0.2 * (progress % 1)
-    return {
-      opacity: Math.max(0.3, opacity),
-      transform: `scale(${Math.max(1, scale)})`,
-      background: opacity > 0.5 ? '#478CBF' : 'transparent',
-      borderColor: '#478CBF',
-    }
-  }
+const wrapperStyle = computed(() => ({
+  transform: `translate3d(0, ${-scrollProgress.value * 100}vh, 0)`,
+  transition: isAnimating ? 'none' : 'none',
+}))
 
-  // Next dot - fade in as scrolling towards it
-  if (index === current + 1 && progress % 1 > 0) {
-    const opacity = progress % 1
-    const scale = 1 + 0.2 * (progress % 1)
-    return {
-      opacity: Math.max(0.3, opacity),
-      transform: `scale(${Math.max(1, scale)})`,
-      background: opacity > 0.5 ? '#478CBF' : 'transparent',
-      borderColor: '#478CBF',
-    }
-  }
-
-  // Previous dot - fade in when scrolling back
-  if (index === current - 1 && progress % 1 < 0) {
-    const opacity = Math.abs(progress % 1)
-    const scale = 1 + 0.2 * Math.abs(progress % 1)
-    return {
-      opacity: Math.max(0.3, opacity),
-      transform: `scale(${Math.max(1, scale)})`,
-      background: opacity > 0.5 ? '#478CBF' : 'transparent',
-      borderColor: '#478CBF',
-    }
-  }
-
-  // Inactive dots
-  return {
-    opacity: 0.3,
-    transform: 'scale(1)',
-    background: 'transparent',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  }
+const easeOutCubic = (t: number): number => {
+  return 1 - Math.pow(1 - t, 3)
 }
 
-const handleScroll = () => {
-  if (!container.value) return
+const animateScroll = (timestamp: number) => {
+  if (!animateStartTime) animateStartTime = timestamp
 
-  const scrollTop = container.value.scrollTop
-  const height = container.value.clientHeight
-  const rawProgress = scrollTop / height
+  const elapsed = timestamp - animateStartTime
+  const progress = Math.min(elapsed / props.duration, 1)
+  const easedProgress = easeOutCubic(progress)
 
-  activeIndex.value = Math.floor(rawProgress)
-  scrollProgress.value = rawProgress
+  scrollProgress.value = animateFrom + (animateTo - animateFrom) * easedProgress
 
-  // Remove hash from URL
-  if (window.location.hash) {
-    history.replaceState(null, '', window.location.pathname)
+  if (progress < 1) {
+    animationFrame = requestAnimationFrame(animateScroll)
+  } else {
+    isAnimating = false
+    animateStartTime = 0
+    animationFrame = null
   }
 }
 
 const scrollTo = (index: number) => {
-  if (!container.value || isScrolling) return
-  if (index < 0 || index >= props.sections.length) return
+  if (index < 0 || index >= props.sections.length || index === currentIndex.value) return
 
-  isScrolling = true
-  const height = container.value.clientHeight
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame)
+  }
 
-  container.value.scrollTo({
-    top: height * index,
-    behavior: 'smooth',
-  })
+  isAnimating = true
+  animateFrom = scrollProgress.value
+  animateTo = index
+  currentIndex.value = index
 
-  activeIndex.value = index
-  scrollProgress.value = index
-
-  setTimeout(() => {
-    isScrolling = false
-  }, 600)
+  animationFrame = requestAnimationFrame(animateScroll)
 }
 
 const scrollToSection = (sectionId: string) => {
@@ -130,38 +107,105 @@ const scrollToSection = (sectionId: string) => {
   }
 }
 
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+
+  const now = Date.now()
+  if (now - lastScrollTime < COOLDOWN) return
+
+  const delta = e.deltaY
+  if (Math.abs(delta) < 10) return
+
+  lastScrollTime = now
+
+  if (delta > 0) {
+    scrollTo(currentIndex.value + 1)
+  } else {
+    scrollTo(currentIndex.value - 1)
+  }
+}
+
+const handleTouchStart = (e: TouchEvent) => {
+  if (isAnimating) return
+  startY = e.touches[0].clientY
+  isDragging = true
+}
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!isDragging) return
+  e.preventDefault()
+  currentY = e.touches[0].clientY
+}
+
+const handleTouchEnd = () => {
+  if (!isDragging) return
+  isDragging = false
+
+  const delta = startY - currentY
+  if (Math.abs(delta) > 50) {
+    if (delta > 0) {
+      scrollTo(currentIndex.value + 1)
+    } else {
+      scrollTo(currentIndex.value - 1)
+    }
+  }
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (isAnimating) return
+
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+    e.preventDefault()
+    scrollTo(currentIndex.value + 1)
+  } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault()
+    scrollTo(currentIndex.value - 1)
+  }
+}
+
 onMounted(() => {
   if (!container.value) return
 
-  container.value.addEventListener('scroll', handleScroll, { passive: true })
+  container.value.addEventListener('wheel', handleWheel, { passive: false })
+  container.value.addEventListener('touchstart', handleTouchStart, { passive: true })
+  container.value.addEventListener('touchmove', handleTouchMove, { passive: false })
+  container.value.addEventListener('touchend', handleTouchEnd, { passive: true })
+  document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
-  container.value?.removeEventListener('scroll', handleScroll)
+  container.value?.removeEventListener('wheel', handleWheel)
+  container.value?.removeEventListener('touchstart', handleTouchStart)
+  container.value?.removeEventListener('touchmove', handleTouchMove)
+  container.value?.removeEventListener('touchend', handleTouchEnd)
+  document.removeEventListener('keydown', handleKeydown)
 })
 
-defineExpose({ scrollTo, scrollToSection, activeIndex, scrollProgress })
+defineExpose({ scrollTo, scrollToSection, currentIndex, scrollProgress })
 </script>
 
 <style scoped>
 .fullpage {
-  height: 100vh;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
 }
 
-.fullpage::-webkit-scrollbar {
-  display: none;
+.fullpage-wrapper {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
 }
 
 .fullpage-section {
+  width: 100%;
   height: 100vh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
   overflow: hidden;
+  background: transparent;
 }
 
 .fullpage-nav {
@@ -182,8 +226,14 @@ defineExpose({ scrollTo, scrollToSection, activeIndex, scrollProgress })
   border: 2px solid rgba(255, 255, 255, 0.3);
   background: transparent;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, background 0.3s ease;
   padding: 0;
+}
+
+.nav-dot.active {
+  background: #478CBF;
+  border-color: #478CBF;
+  transform: scale(1.2);
 }
 
 .nav-dot:hover {

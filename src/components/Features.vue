@@ -37,7 +37,7 @@ const features = [
   align-items: center;
   justify-content: center;
   padding: 80px 2rem;
-  background: #0B1120;
+  background: transparent;
   overflow: hidden;
 }
 
