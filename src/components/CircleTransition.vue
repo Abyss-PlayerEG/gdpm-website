@@ -25,13 +25,23 @@ const circleStyle = computed(() => ({
 }))
 
 onMounted(() => {
+  let resolveTransition: ((value: boolean) => void) | null = null
+
   router.beforeEach((to, from) => {
     if (to.path === from.path) return
 
     return new Promise<boolean>((resolve) => {
+      resolveTransition = resolve
       active.value = true
       expanding.value = true
+    })
+  })
 
+  router.afterEach(() => {
+    if (resolveTransition) {
+      const resolve = resolveTransition
+      resolveTransition = null
+      // Wait a bit for the component to render
       setTimeout(() => {
         resolve(true)
         expanding.value = false
@@ -41,8 +51,8 @@ onMounted(() => {
           shrinking.value = false
           active.value = false
         }, 600)
-      }, 600)
-    })
+      }, 100)
+    }
   })
 
   document.addEventListener('click', (e) => {
