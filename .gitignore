@@ -31,3 +31,6 @@ Thumbs.db
 !.dev.vars.example
 .env*
 !.env.example
+
+# JetBrains
+.run/
