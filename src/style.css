@@ -5,6 +5,14 @@
   font-display: swap;
 }
 
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -19,7 +27,6 @@
 html {
   touch-action: manipulation;
   cursor: none;
-  scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

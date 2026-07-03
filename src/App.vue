@@ -38,8 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import Lenis from 'lenis'
 import Header from './components/Header.vue'
 import CircleTransition from './components/CircleTransition.vue'
 import CustomCursor from './components/CustomCursor.vue'
@@ -56,6 +57,9 @@ const scroller = ref<InstanceType<typeof FullPageScroll>>()
 const isHome = computed(() => route.path === '/')
 const showHeader = computed(() => route.name !== 'not-found' && route.name !== 'dev-404')
 
+let lenis: Lenis | null = null
+let rafId: number | null = null
+
 const sections = [
   { id: 'hero' },
   { id: 'features' },
@@ -67,6 +71,46 @@ const sections = [
 const scrollToSection = (sectionId: string) => {
   scroller.value?.scrollToSection(sectionId)
 }
+
+const raf = (time: number) => {
+  lenis?.raf(time)
+  rafId = requestAnimationFrame(raf)
+}
+
+const initLenis = () => {
+  if (lenis) {
+    lenis.destroy()
+  }
+  lenis = new Lenis({
+    smoothWheel: true,
+    lerp: 0.1,
+    duration: 1.2,
+  })
+  rafId = requestAnimationFrame(raf)
+}
+
+const destroyLenis = () => {
+  if (lenis) {
+    lenis.destroy()
+    lenis = null
+  }
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+}
+
+watch(isHome, (home) => {
+  if (home) {
+    destroyLenis()
+  } else {
+    initLenis()
+  }
+}, { immediate: true })
+
+onUnmounted(() => {
+  destroyLenis()
+})
 
 // Animate orbs based on scroll progress
 watch(
@@ -124,11 +168,12 @@ watch(
 }
 
 html, body {
-  height: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 #app {
-  height: 100%;
+  min-height: 100vh;
   position: relative;
 }
 
