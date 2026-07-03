@@ -2,11 +2,21 @@
 
 Official website for [GDPM](https://github.com/Abyss-PlayerEG/godot-gdpm) - Godot Dependency Package Manager.
 
+## Features
+
+- Full-page scroll sections with smooth animations
+- Custom cursor with hover/click effects
+- Circle transition between pages
+- GitHub API integration for version list and downloads
+- Internationalization (EN/ZH)
+- Dark theme with Godot blue (#478CBF) accent
+- Responsive design
+
 ## Tech Stack
 
 - **Vue 3** + **TypeScript** + **Vite**
 - **vue-router** — Routing
-- **vue-i18n** — Internationalization (EN/ZH)
+- **vue-i18n** — Internationalization
 - **GSAP** — Animations
 - **@iconify/vue** — Icons
 
@@ -21,22 +31,21 @@ pnpm dev
 
 # Build for production
 pnpm build
+
+# Preview production build
+pnpm preview
 ```
 
-## Vue Project Manager (vuem)
+## Project Structure
 
-```bash
-# Install Python dependencies
-uv sync
-
-# Interactive menu
-uv run vuem
-
-# Commands
-uv run vuem build      # Build
-uv run vuem analyze    # Analyze bundle
-uv run vuem check      # Lint + typecheck
-uv run vuem version show  # Show version
+```
+src/
+├── components/     # Vue components
+├── composables/    # Composable functions
+├── i18n/           # Internationalization files
+├── router/         # Vue Router config
+├── views/          # Page components
+└── style.css       # Global styles
 ```
 
 ## License
