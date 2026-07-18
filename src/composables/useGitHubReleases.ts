@@ -64,9 +64,7 @@ export async function fetchAndCacheReleases(): Promise<void> {
   }
 
   try {
-    const response = await fetch(
-      'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases?per_page=100'
-    )
+    const response = await fetch('/api/releases')
 
     if (!response.ok) {
       throw new Error('Failed to fetch releases')
@@ -111,9 +109,7 @@ export function useGitHubReleases() {
       loading.value = true
       error.value = null
 
-      const response = await fetch(
-        'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases?per_page=100'
-      )
+      const response = await fetch('/api/releases')
 
       if (!response.ok) {
         throw new Error('Failed to fetch releases')
