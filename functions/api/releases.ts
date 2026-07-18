@@ -23,14 +23,6 @@ interface GitHubRelease {
 const GITHUB_API = 'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases'
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const cache = caches.default
-  const cacheKey = new Request(context.request.url, context.request)
-  const cached = await cache.match(cacheKey)
-
-  if (cached) {
-    return cached
-  }
-
   const headers: Record<string, string> = {
     'Accept': 'application/vnd.github.v3+json',
     'User-Agent': 'gdpm-website',
@@ -41,7 +33,16 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const response = await fetch(`${GITHUB_API}?per_page=100`, { headers })
+    const url = `${GITHUB_API}?per_page=100`
+    console.log('Fetching:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+      cf: { cacheTtl: 300 },
+    })
+
+    console.log('Response status:', response.status)
 
     if (!response.ok) {
       const errorBody = await response.text()
@@ -75,20 +76,18 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     const responseBody = JSON.stringify(slimmed)
 
-    const resp = new Response(responseBody, {
+    return new Response(responseBody, {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'public, max-age=3600, s-maxage=7200',
       },
     })
-
-    context.waitUntil(cache.put(cacheKey, resp.clone()))
-
-    return resp
   } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e))
+    console.error('Fetch error:', error.message)
     return new Response(JSON.stringify({
       error: 'Internal server error',
-      message: e instanceof Error ? e.message : String(e),
+      message: error.message,
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

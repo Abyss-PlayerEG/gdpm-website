@@ -1,7 +1,13 @@
 name = "gdpm-website"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
+
+[dev]
+port = 8788
+local_protocol = "http"
 
 [vars]
 # 生产环境变量在 Cloudflare Dashboard 设置
 # GITHUB_TOKEN = ""  # 不要在这里写，用 Dashboard 的 Environment Variables
+NODE_TLS_REJECT_UNAUTHORIZED = "0"
