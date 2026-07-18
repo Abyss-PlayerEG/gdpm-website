@@ -23,12 +23,12 @@ interface GitHubRelease {
 const GITHUB_API = 'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases'
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const cache = caches.default
-  const cacheKey = new Request(context.request.url, context.request)
-  const cached = await cache.match(cacheKey)
+  const cache = await caches.open('releases-cache');
+  const cacheKey = new Request(context.request.url, context.request);
+  const cached = await cache.match(cacheKey);
 
   if (cached) {
-    return cached
+    return cached;
   }
 
   const headers: Record<string, string> = {
