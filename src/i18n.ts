@@ -2,6 +2,12 @@ import { createI18n } from 'vue-i18n'
 
 const messages = {
   en: {
+    pageTitle: {
+      home: 'Home',
+      download: 'Download',
+      versions: 'Versions',
+      notFound: '404'
+    },
     nav: {
       docs: 'Docs',
       versions: 'All Versions',
@@ -111,6 +117,12 @@ const messages = {
     }
   },
   zh: {
+    pageTitle: {
+      home: '首页',
+      download: '下载',
+      versions: '版本列表',
+      notFound: '404'
+    },
     nav: {
       docs: '文档',
       versions: '全部版本',

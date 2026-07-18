@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Lenis from 'lenis'
 import Header from './components/Header.vue'
 import CircleTransition from './components/CircleTransition.vue'
@@ -52,6 +53,7 @@ import Versions from './components/Versions.vue'
 import Community from './components/Community.vue'
 
 const route = useRoute()
+const { locale, t } = useI18n()
 const scroller = ref<InstanceType<typeof FullPageScroll>>()
 
 const isHome = computed(() => route.path === '/')
@@ -159,6 +161,14 @@ watch(
     orb2.style.right = `${orb2Right}%`
   }
 )
+
+// Update page title when language changes
+watch(locale, () => {
+  const titleKey = route.meta.titleKey as string
+  if (titleKey) {
+    document.title = `GDPM — ${t(titleKey)}`
+  }
+})
 </script>
 
 <style>

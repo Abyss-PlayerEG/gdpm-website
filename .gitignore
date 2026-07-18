@@ -24,6 +24,7 @@ Thumbs.db
 
 # Build
 *.egg-info/
+*.tsbuildinfo
 
 # wrangler files
 .wrangler
