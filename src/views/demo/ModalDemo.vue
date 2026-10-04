@@ -58,9 +58,9 @@ modal.open({ title: '标题', content: '内容' })</code></pre>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {ref} from 'vue'
 import Modal from '../../components/Modal.vue'
-import { useModal } from '../../composables/useModal'
+import {useModal} from '../../composables/useModal'
 
 const showBasic = ref(false)
 const showCustom = ref(false)
