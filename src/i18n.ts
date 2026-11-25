@@ -9,7 +9,6 @@ const messages = {
       notFound: '404'
     },
     nav: {
-      docs: 'Docs',
       versions: 'All Versions',
       github: 'GitHub',
       pypi: 'PyPI'
@@ -75,8 +74,7 @@ const messages = {
       step1Title: 'Install GDPM',
       step2Title: 'Initialize your project or create a new one',
       step3Title: 'Add plugins',
-      or: 'or',
-      viewDocs: 'View documentation'
+      or: 'or'
     },
     community: {
       title: 'Community',
@@ -124,7 +122,6 @@ const messages = {
       notFound: '404'
     },
     nav: {
-      docs: '文档',
       versions: '全部版本',
       github: 'GitHub',
       pypi: 'PyPI'
@@ -190,8 +187,7 @@ const messages = {
       step1Title: '安装 GDPM',
       step2Title: '初始化项目或创建新项目',
       step3Title: '添加插件',
-      or: '或',
-      viewDocs: '查看文档'
+      or: '或'
     },
     community: {
       title: '社区',

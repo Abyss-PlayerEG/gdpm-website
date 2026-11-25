@@ -74,18 +74,19 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
-import { useGitHubReleases } from '../composables/useGitHubReleases'
-import { getVersionType } from '../utils/version'
+import { useGitHubReleases, isPrerelease } from '../composables/useGitHubReleases'
 
 const { t } = useI18n()
 const { versions, loading, error, refresh } = useGitHubReleases()
 
+// GitHub's prerelease flag decides the column — version-string parsing
+// (0.1.0a1 -> alpha) contradicted releases whose flag was cleared.
 const stableVersions = computed(() =>
-  versions.value.filter(v => getVersionType(v) === 'stable')
+  versions.value.filter(v => !isPrerelease(v))
 )
 
 const preReleaseVersions = computed(() =>
-  versions.value.filter(v => getVersionType(v) !== 'stable')
+  versions.value.filter(v => isPrerelease(v))
 )
 </script>
 

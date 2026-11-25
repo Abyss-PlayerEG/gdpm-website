@@ -45,17 +45,11 @@
           </div>
         </div>
       </div>
-
-      <a href="https://abyss-playereg.github.io/godot-gdpm/" target="_blank" class="docs-link" data-animate="fadeUp" data-delay="0.65">
-        {{ t('quickstart.viewDocs') }}
-        <Icon icon="ri:arrow-right-line" width="16" height="16" />
-      </a>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import CopyButton from './CopyButton.vue'
 

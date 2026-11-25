@@ -24,7 +24,7 @@ interface CacheData {
 }
 
 const CACHE_KEY = 'gdpm_releases_cache'
-const CACHE_DURATION = 60 * 60 * 1000 // 1 hour
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes — release assets/prerelease flags change at publish time
 
 function getCached(): GitHubRelease[] | null {
   try {
@@ -164,4 +164,21 @@ export function getArch(name: string): string {
   if (name.includes('arm64')) return 'ARM64'
   if (name.includes('amd64')) return 'AMD64'
   return 'Unknown'
+}
+
+const PLATFORM_TOKENS = ['linux', 'macos', 'windows']
+const ARCH_TOKENS = ['amd64', 'arm64', 'x86_64', 'aarch64']
+
+export function getVariant(name: string): string {
+  const base = name.replace(/\.(tar\.gz|zip)$/, '')
+  const segments = base.split('_')
+  const last = segments[segments.length - 1] ?? ''
+  if (!last || PLATFORM_TOKENS.includes(last) || ARCH_TOKENS.includes(last)) return ''
+  const distro = last.match(/^([a-z]+)(\d{2})(\d{2})$/)
+  if (distro) return `${distro[1][0].toUpperCase()}${distro[1].slice(1)} ${distro[2]}.${distro[3]}`
+  return last
+}
+
+export function isPrerelease(version: string): boolean {
+  return getReleaseByVersion(version)?.prerelease ?? false
 }
