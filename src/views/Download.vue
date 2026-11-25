@@ -47,6 +47,7 @@
             <div class="asset-info">
               <span class="asset-name">{{ getPlatform(asset.name) }}</span>
               <span class="asset-arch">{{ getArch(asset.name) }}</span>
+              <span v-if="getVariant(asset.name)" class="asset-variant">{{ getVariant(asset.name) }}</span>
             </div>
             <div class="asset-meta">
               <span class="asset-size">{{ formatSize(asset.size) }}</span>
@@ -113,7 +114,7 @@ import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, parseReleaseNotes } from '../composables/useReleaseDownload'
+import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, getVariant, isPrerelease, parseReleaseNotes } from '../composables/useReleaseDownload'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
 import type { VersionType } from '../utils/version'
@@ -127,12 +128,10 @@ const { release, assets, loading, error } = useReleaseDownload(version)
 const { versions } = useGitHubReleases()
 
 const isLatest = computed(() => {
-  // Find the latest non-prerelease version
-  const latestStable = versions.value.find(v => {
-    const type = getVersionType(v)
-    return type === 'stable'
-  })
-  return latestStable === version
+  // GitHub's rule: "Latest" goes to the newest release whose prerelease
+  // flag is off — not simply the first entry in the list.
+  const firstStable = versions.value.find(v => !isPrerelease(v))
+  return firstStable === version
 })
 
 const versionTags = computed(() => {
@@ -376,6 +375,11 @@ const getPlatformIcon = (name: string): string => {
 .asset-arch {
   font-size: 13px;
   color: #94A3B8;
+}
+
+.asset-variant {
+  font-size: 13px;
+  color: #93C5FD;
 }
 
 .asset-meta {

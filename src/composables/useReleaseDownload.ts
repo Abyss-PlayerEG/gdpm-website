@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue'
-import { getReleaseByVersion, formatSize, formatDate, getPlatform, getArch, fetchAndCacheReleases } from './useGitHubReleases'
+import { getReleaseByVersion, formatSize, formatDate, getPlatform, getArch, getVariant, isPrerelease, fetchAndCacheReleases } from './useGitHubReleases'
 
 interface GitHubAsset {
   name: string
@@ -62,7 +62,7 @@ export function useReleaseDownload(version: string) {
   return { release, assets, loading, error, refresh: fetchRelease }
 }
 
-export { formatSize, formatDate, getPlatform, getArch }
+export { formatSize, formatDate, getPlatform, getArch, getVariant, isPrerelease }
 
 export function parseReleaseNotes(body: string): { en: string; zh: string } {
   if (!body) return { en: '', zh: '' }
