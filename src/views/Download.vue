@@ -35,43 +35,60 @@
         <p class="section-title">{{ t('download.downloads') }}</p>
 
         <div class="assets-grid">
-          <a
+          <div
             v-for="asset in assets"
             :key="asset.name"
-            :href="asset.browser_download_url"
             class="asset-card"
           >
             <div class="asset-icon">
               <Icon :icon="getPlatformIcon(asset.name)" width="24" height="24" />
             </div>
-            <div class="asset-info">
-              <span class="asset-name">{{ getPlatform(asset.name) }}</span>
-              <span class="asset-arch">{{ getArch(asset.name) }}</span>
-              <span v-if="getVariant(asset.name)" class="asset-variant">{{ getVariant(asset.name) }}</span>
+            <span class="asset-name">{{ getPlatform(asset.name) }}</span>
+            <div class="asset-tags">
+              <span class="asset-tag tag-arch">{{ getArch(asset.name) }}</span>
+              <span v-if="getVariant(asset.name)" class="asset-tag tag-variant">{{ getVariant(asset.name) }}</span>
             </div>
-            <div class="asset-meta">
+            <div class="asset-side">
               <span class="asset-size">{{ formatSize(asset.size) }}</span>
-              <Icon icon="ri:download-2-line" width="16" height="16" />
-            </div>
-          </a>
-        </div>
-
-        <div v-if="assets.some(a => a.digest)" class="checksums-section">
-          <p class="section-title">SHA256</p>
-          <div class="checksum-list">
-            <div v-for="asset in assets" :key="asset.name" class="checksum-item">
-              <div class="checksum-header">
-                <Icon :icon="getPlatformIcon(asset.name)" width="16" height="16" class="checksum-icon" />
-                <span class="checksum-name">{{ asset.name }}</span>
-              </div>
-              <div class="checksum-hash">
-                <code>{{ asset.digest ? asset.digest.replace('sha256:', '') : '-' }}</code>
-                <CopyButton
-                  v-if="asset.digest"
-                  :text="asset.digest.replace('sha256:', '')"
-                  :size="14"
+              <button
+                v-if="asset.digest"
+                type="button"
+                class="asset-hash"
+                :aria-label="t('download.copyHash')"
+                @click="copyDigest(asset)"
+              >
+                <span class="hash-label">SHA256</span>
+                <span class="hash-icons">
+                  <Icon
+                    icon="ri:file-copy-line"
+                    width="16"
+                    height="16"
+                    class="icon-copy"
+                    :class="{ copied: copiedName === asset.name }"
+                  />
+                  <Icon
+                    icon="ri:check-line"
+                    width="16"
+                    height="16"
+                    class="icon-check"
+                    :class="{ copied: copiedName === asset.name }"
+                  />
+                </span>
+              </button>
+              <a
+                :href="asset.browser_download_url"
+                class="asset-download"
+                :class="{ 'is-loading': downloading === asset.name }"
+                :aria-label="t('download.downloadBtn')"
+                @click="onDownloadClick(asset.name)"
+              >
+                <Icon
+                  :icon="downloading === asset.name ? 'ri:loader-4-line' : 'ri:download-2-line'"
+                  width="18"
+                  height="18"
+                  :class="{ spin: downloading === asset.name }"
                 />
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -109,12 +126,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, getVariant, isPrerelease, parseReleaseNotes } from '../composables/useReleaseDownload'
+import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, getVariant, parseReleaseNotes } from '../composables/useReleaseDownload'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
 import type { VersionType } from '../utils/version'
@@ -125,13 +142,11 @@ const route = useRoute()
 const version = route.params.version as string
 
 const { release, assets, loading, error } = useReleaseDownload(version)
-const { versions } = useGitHubReleases()
+const { latestTag } = useGitHubReleases()
 
 const isLatest = computed(() => {
-  // GitHub's rule: "Latest" goes to the newest release whose prerelease
-  // flag is off — not simply the first entry in the list.
-  const firstStable = versions.value.find(v => !isPrerelease(v))
-  return firstStable === version
+  // GitHub's own designation — identical to what the versions list shows
+  return latestTag.value === version
 })
 
 const versionTags = computed(() => {
@@ -153,6 +168,40 @@ const hasTranslation = computed(() => {
   const notes = parseReleaseNotes(release.value.body)
   return !!notes.zh
 })
+
+// Download button state: the browser owns the transfer, so there is no
+// event for "started" — the spinner covers the gap until it takes over.
+const downloading = ref<string | null>(null)
+const copiedName = ref<string | null>(null)
+
+const onDownloadClick = (name: string) => {
+  if (downloading.value === name) return
+  downloading.value = name
+  window.setTimeout(() => {
+    if (downloading.value === name) downloading.value = null
+  }, 1500)
+}
+
+const copyDigest = async (asset: { name: string; digest: string }) => {
+  const value = asset.digest.replace('sha256:', '')
+  try {
+    await navigator.clipboard.writeText(value)
+  } catch {
+    // Fallback when the async clipboard API is unavailable or denied
+    const textarea = document.createElement('textarea')
+    textarea.value = value
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+  }
+  copiedName.value = asset.name
+  window.setTimeout(() => {
+    if (copiedName.value === asset.name) copiedName.value = null
+  }, 1500)
+}
 
 const getPlatformIcon = (name: string): string => {
   if (name.includes('linux')) return 'devicon-plain:linux'
@@ -321,25 +370,24 @@ const getPlatformIcon = (name: string): string => {
 .assets-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 48px;
 }
 
 .asset-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
+  gap: 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
   border: 1px solid rgba(51, 65, 85, 0.3);
   text-decoration: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s;
 }
 
 .asset-card:hover {
-  border-color: rgba(71, 140, 191, 0.4);
-  background: linear-gradient(135deg, rgba(71, 140, 191, 0.1) 0%, rgba(71, 140, 191, 0.05) 100%);
+  border-color: rgba(71, 140, 191, 0.3);
 }
 
 .asset-icon {
@@ -359,38 +407,53 @@ const getPlatformIcon = (name: string): string => {
   height: 24px;
 }
 
-.asset-info {
-  flex: 1;
+.asset-side {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
 }
 
 .asset-name {
   font-size: 16px;
   font-weight: 600;
   color: #FFFFFF;
+  min-width: 76px;
 }
 
-.asset-arch {
-  font-size: 13px;
-  color: #94A3B8;
-}
-
-.asset-variant {
-  font-size: 13px;
-  color: #93C5FD;
-}
-
-.asset-meta {
+.asset-tags {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #64748B;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.asset-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
+.tag-arch {
+  background: rgba(160, 174, 192, 0.2);
+  color: #A0AEC0;
+}
+
+.tag-variant {
+  background: rgba(71, 140, 191, 0.2);
+  color: #478CBF;
 }
 
 .asset-size {
-  font-size: 13px;
+  min-width: 62px;
+  text-align: right;
+  font-size: 12px;
+  color: #475569;
 }
 
 .install-section {
@@ -427,56 +490,100 @@ const getPlatformIcon = (name: string): string => {
   background: rgba(71, 140, 191, 0.2);
 }
 
-.checksums-section {
-  margin-bottom: 48px;
-}
-
-.checksum-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.checksum-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
+.asset-hash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 34px;
+  padding: 0 12px;
   border-radius: 8px;
   background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(51, 65, 85, 0.2);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  color: #94A3B8;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
 }
 
-.checksum-header {
-  display: flex;
+.asset-hash:hover {
+  border-color: rgba(71, 140, 191, 0.4);
+  color: #93C5FD;
+}
+
+.hash-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Cross-fade like CopyButton: both icons stacked, opacity swaps */
+.hash-icons {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.checksum-icon {
-  color: #478CBF;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
-.checksum-name {
-  font-size: 13px;
-  color: #94A3B8;
-  font-family: 'JetBrains Mono Nerd Font', monospace;
-  word-break: break-all;
+.hash-icons .icon-copy,
+.hash-icons .icon-check {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 0.2s ease;
 }
 
-.checksum-hash {
-  flex: 1;
-  display: flex;
+.hash-icons .icon-copy {
+  opacity: 1;
+}
+
+.hash-icons .icon-check {
+  opacity: 0;
+  color: #48BB78;
+}
+
+.hash-icons .icon-copy.copied {
+  opacity: 0;
+}
+
+.hash-icons .icon-check.copied {
+  opacity: 1;
+}
+
+.asset-download {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(71, 140, 191, 0.15);
+  border: 1px solid rgba(71, 140, 191, 0.3);
+  color: #93C5FD;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.checksum-hash code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: #64748B;
-  word-break: break-all;
+.asset-download:hover {
+  background: rgba(71, 140, 191, 0.3);
+  color: #FFFFFF;
+}
+
+/* NOTE: not `.loading` — Download.vue already uses that class for the
+   page-level spinner (padding: 80px) and it would inflate this button. */
+.asset-download.is-loading {
+  cursor: progress;
+}
+
+/* Pin the icon box so swapping download -> spinner cannot resize the button */
+.asset-download svg {
+  display: block;
+  width: 18px;
+  height: 18px;
 }
 
 .copy-btn-sm {
@@ -614,6 +721,13 @@ const getPlatformIcon = (name: string): string => {
 @media (max-width: 640px) {
   .version-title {
     font-size: 36px;
+  }
+
+  /* Mobile: the icon already says which platform, and the size is
+     secondary — dropping both keeps one row per asset readable. */
+  .asset-name,
+  .asset-size {
+    display: none;
   }
 }
 </style>

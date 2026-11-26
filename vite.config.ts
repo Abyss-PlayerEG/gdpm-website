@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { readFileSync } from 'fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 function getGithubToken() {
   try {
@@ -13,29 +14,60 @@ function getGithubToken() {
   }
 }
 
+const RELEASES_URL = 'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases?per_page=100'
+const LATEST_URL = 'https://api.github.com/repos/Abyss-PlayerEG/godot-gdpm/releases/latest'
+
+// Mirrors functions/api/releases.ts. The old proxy returned GitHub's raw list,
+// so local dev never had a `latest` designation and the badge could not be
+// verified without deploying.
+function releasesApi(): Plugin {
+  const handler = async (_req: IncomingMessage, res: ServerResponse) => {
+    const headers: Record<string, string> = {
+      'User-Agent': 'gdpm-website',
+      'Accept': 'application/vnd.github.v3+json',
+    }
+    const token = getGithubToken()
+    if (token) headers.Authorization = `Bearer ${token}`
+
+    try {
+      const [list, latest] = await Promise.all([
+        fetch(RELEASES_URL, { headers }),
+        fetch(LATEST_URL, { headers }),
+      ])
+      if (!list.ok) throw new Error(`GitHub releases ${list.status}`)
+      const releases = await list.json()
+      const latestTag = latest.ok
+        ? (((await latest.json()) as { tag_name?: string }).tag_name ?? '')
+        : ''
+
+      res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      res.end(JSON.stringify({ latest: latestTag, releases }))
+    } catch (error) {
+      res.statusCode = 502
+      res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      res.end(JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }))
+    }
+  }
+
+  return {
+    name: 'gdpm-releases-api',
+    configureServer(server) {
+      server.middlewares.use('/api/releases', handler)
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use('/api/releases', handler)
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools()],
+  plugins: [vue(), vueDevTools(), releasesApi()],
   server: {
     host: true,
     port: 8090,
-    proxy: {
-      '/api/releases': {
-        target: 'https://api.github.com',
-        changeOrigin: true,
-        secure: false,
-        rewrite: () => '/repos/Abyss-PlayerEG/godot-gdpm/releases?per_page=100',
-        configure: (proxy) => {
-          const token = getGithubToken()
-          proxy.on('proxyReq', (proxyReq) => {
-            if (token) {
-              proxyReq.setHeader('Authorization', `Bearer ${token}`)
-            }
-            proxyReq.setHeader('User-Agent', 'gdpm-website')
-          })
-        },
-      },
-    },
   },
   build: {
     rollupOptions: {

@@ -149,7 +149,7 @@ const { t } = useI18n()
 }
 
 .code-block code {
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   color: #93C5FD;
 }

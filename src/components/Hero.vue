@@ -34,7 +34,6 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import { useGitHubReleases, getReleaseByVersion } from '../composables/useGitHubReleases'
-import { getVersionType } from '../utils/version'
 import { getOS, getOSIcon } from '../utils/os'
 
 const emit = defineEmits<{
@@ -42,14 +41,17 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { versions } = useGitHubReleases()
+const { versions, releasesList, latestTag } = useGitHubReleases()
 
+// Version shown in the hero badge — GitHub's designation, with the newest
+// release as fallback (this badge makes no "Latest" claim).
 const latestStable = computed(() => {
-  return versions.value.find(v => getVersionType(v) === 'stable') || versions.value[0] || ''
+  return latestTag.value || versions.value[0] || ''
 })
 
 const latestPreRelease = computed(() => {
-  return versions.value.find(v => getVersionType(v) !== 'stable') || ''
+  const pre = releasesList.value.find((r) => r.prerelease)
+  return pre ? pre.tag_name.replace(/^v/, '') : ''
 })
 
 const os = getOS()

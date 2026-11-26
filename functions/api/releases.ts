@@ -58,6 +58,25 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     const releases: GitHubRelease[] = await response.json()
 
+    // GitHub's "Latest" is a stored pointer exposed only by /releases/latest —
+    // it is not derivable from the list (the prerelease flag does not control
+    // it, and `make_latest` is not returned by the API).
+    let latest = ''
+    try {
+      const latestResponse = await fetch(`${GITHUB_API}/latest`, {
+        method: 'GET',
+        headers,
+        cf: { cacheTtl: 300 },
+      })
+      if (latestResponse.ok) {
+        const latestRelease = (await latestResponse.json()) as { tag_name?: string }
+        latest = latestRelease.tag_name ?? ''
+      }
+      // 404 = every release is a prerelease; leave latest empty so no badge shows
+    } catch (latestError) {
+      console.log('Latest lookup failed:', latestError)
+    }
+
     const slimmed = releases.map((r) => ({
       tag_name: r.tag_name,
       name: r.name,
@@ -74,7 +93,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       })),
     }))
 
-    const responseBody = JSON.stringify(slimmed)
+    const responseBody = JSON.stringify({ latest, releases: slimmed })
 
     return new Response(responseBody, {
       headers: {

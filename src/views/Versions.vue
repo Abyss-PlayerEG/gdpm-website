@@ -19,51 +19,58 @@
         <button @click="refresh" class="retry-btn">{{ t('versions.retry') }}</button>
       </div>
 
-      <div v-else class="versions-grid">
-        <!-- Stable versions -->
-        <div class="versions-column">
-          <div class="column-header">
-            <Icon icon="ri:checkbox-circle-fill" width="18" height="18" class="icon-stable" />
-            <span>Stable</span>
+      <div v-else>
+        <router-link
+          v-if="latestRow"
+          :to="`/version/${latestRow.tag}`"
+          class="latest-card"
+        >
+          <div class="latest-card-main">
+            <span class="version-badge badge-latest">Latest</span>
+            <span class="latest-tag">v{{ latestRow.tag }}</span>
           </div>
-          <div class="version-list">
-            <router-link
-              v-for="(version, index) in stableVersions"
-              :key="version"
-              :to="`/version/${version}`"
-              class="version-row"
-            >
-              <div class="version-info">
-                <span class="version-tag">v{{ version }}</span>
-                <span v-if="index === 0" class="version-badge badge-latest">Latest</span>
-              </div>
-              <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
-            </router-link>
-            <div v-if="!stableVersions.length" class="empty">No stable releases</div>
+          <div class="latest-card-meta">
+            <span class="version-date">{{ latestRow.date }}</span>
+            <Icon icon="ri:arrow-right-s-line" width="20" height="20" class="version-arrow" />
           </div>
+        </router-link>
+
+        <div class="filter-bar" role="tablist">
+          <div
+            class="filter-slider"
+            aria-hidden="true"
+            :style="{ transform: `translateX(${filterIndex * 100}%)` }"
+          ></div>
+          <button
+            v-for="option in filters"
+            :key="option.value"
+            class="filter-btn"
+            :class="{ active: filter === option.value }"
+            :aria-selected="filter === option.value"
+            role="tab"
+            type="button"
+            @click="filter = option.value"
+          >
+            {{ t(option.label) }}
+            <span class="filter-count">{{ counts[option.value] }}</span>
+          </button>
         </div>
 
-        <!-- Pre-release versions -->
-        <div class="versions-column">
-          <div class="column-header">
-            <Icon icon="ri:flask-fill" width="18" height="18" class="icon-pre" />
-            <span>Pre-release</span>
-          </div>
-          <div class="version-list">
-            <router-link
-              v-for="(version, index) in preReleaseVersions"
-              :key="version"
-              :to="`/version/${version}`"
-              class="version-row"
-            >
-              <div class="version-info">
-                <span class="version-tag">v{{ version }}</span>
-                <span v-if="index === 0" class="version-badge badge-pre">Pre-release</span>
-              </div>
-              <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
-            </router-link>
-            <div v-if="!preReleaseVersions.length" class="empty">No pre-releases</div>
-          </div>
+        <div class="version-list">
+          <router-link
+            v-for="row in filteredRows"
+            :key="row.tag"
+            :to="`/version/${row.tag}`"
+            class="version-row"
+          >
+            <div class="version-info">
+              <span class="version-tag">v{{ row.tag }}</span>
+              <span v-if="row.tag === latestTag" class="version-badge badge-latest">Latest</span>
+            </div>
+            <span class="version-date">{{ row.date }}</span>
+            <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
+          </router-link>
+          <div v-if="!filteredRows.length" class="empty">{{ emptyText }}</div>
         </div>
       </div>
     </div>
@@ -71,22 +78,59 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
-import { useGitHubReleases, isPrerelease } from '../composables/useGitHubReleases'
+import { useGitHubReleases } from '../composables/useGitHubReleases'
+
+type Filter = 'all' | 'stable' | 'pre'
 
 const { t } = useI18n()
-const { versions, loading, error, refresh } = useGitHubReleases()
+const { releasesList, latestTag, loading, error, refresh } = useGitHubReleases()
 
-// GitHub's prerelease flag decides the column — version-string parsing
-// (0.1.0a1 -> alpha) contradicted releases whose flag was cleared.
-const stableVersions = computed(() =>
-  versions.value.filter(v => !isPrerelease(v))
+const filter = ref<Filter>('all')
+
+const filters: { value: Filter; label: string }[] = [
+  { value: 'all', label: 'versions.filterAll' },
+  { value: 'stable', label: 'versions.filterStable' },
+  { value: 'pre', label: 'versions.filterPre' },
+]
+
+// API returns releases newest-first
+const rows = computed(() =>
+  releasesList.value.map((release) => ({
+    tag: release.tag_name.replace(/^v/, ''),
+    date: release.published_at ? release.published_at.slice(0, 10) : '',
+    prerelease: release.prerelease,
+  }))
 )
 
-const preReleaseVersions = computed(() =>
-  versions.value.filter(v => isPrerelease(v))
+const counts = computed(() => ({
+  all: rows.value.length,
+  stable: rows.value.filter((row) => !row.prerelease).length,
+  pre: rows.value.filter((row) => row.prerelease).length,
+}))
+
+const filteredRows = computed(() => {
+  if (filter.value === 'stable') return rows.value.filter((row) => !row.prerelease)
+  if (filter.value === 'pre') return rows.value.filter((row) => row.prerelease)
+  return rows.value
+})
+
+// Drives the capsule slider: 0 = All, 1 = Stable, 2 = Pre-release
+const filterIndex = computed(() =>
+  filters.findIndex((option) => option.value === filter.value)
+)
+
+const emptyText = computed(() => {
+  if (filter.value === 'stable') return t('versions.emptyStable')
+  if (filter.value === 'pre') return t('versions.emptyPre')
+  return t('versions.emptyAll')
+})
+
+// Featured above the filters; the list below keeps it as well
+const latestRow = computed(() =>
+  rows.value.find((row) => row.tag === latestTag.value) ?? null
 )
 </script>
 
@@ -171,39 +215,109 @@ const preReleaseVersions = computed(() =>
   color: #FFFFFF;
 }
 
-.versions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-
-.versions-column {
-  background: rgba(30, 41, 59, 0.3);
-  border: 1px solid rgba(51, 65, 85, 0.3);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.column-header {
+.latest-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-  font-size: 15px;
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: rgba(71, 140, 191, 0.12);
+  border: 1px solid rgba(71, 140, 191, 0.4);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.latest-card:hover {
+  background: rgba(71, 140, 191, 0.2);
+  border-color: #478CBF;
+}
+
+.latest-card-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.latest-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
   color: #FFFFFF;
 }
 
-.icon-stable {
-  color: #48BB78;
+.latest-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.icon-pre {
-  color: #ED8936;
+.filter-bar {
+  position: relative;
+  display: flex;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.5);
+}
+
+/* Three equal segments inside the capsule, one per filter */
+.filter-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 3);
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  background: #478CBF;
+  transition: transform 0.3s ease;
+}
+
+.filter-btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: #94A3B8;
+  font-size: 13px;
+  /* CJK fonts report a taller normal line-height than Latin ones, which
+     made the whole bar 4px taller when switching to Chinese */
+  line-height: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.filter-btn:hover {
+  color: #FFFFFF;
+}
+
+.filter-btn.active {
+  color: #FFFFFF;
+}
+
+.filter-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #64748B;
+}
+
+.filter-btn.active .filter-count {
+  color: #93C5FD;
 }
 
 .version-list {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: 16px;
   padding: 8px;
   max-height: 600px;
   overflow-y: auto;
@@ -213,6 +327,7 @@ const preReleaseVersions = computed(() =>
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 12px 16px;
   border-radius: 8px;
   text-decoration: none;
@@ -224,7 +339,7 @@ const preReleaseVersions = computed(() =>
 }
 
 .version-tag {
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   color: #E2E8F0;
 }
@@ -233,6 +348,13 @@ const preReleaseVersions = computed(() =>
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.version-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #64748B;
+  margin-left: auto;
 }
 
 .version-badge {
@@ -246,11 +368,6 @@ const preReleaseVersions = computed(() =>
 .badge-latest {
   background: rgba(71, 140, 191, 0.2);
   color: #478CBF;
-}
-
-.badge-pre {
-  background: rgba(237, 137, 54, 0.2);
-  color: #ED8936;
 }
 
 .version-arrow {
@@ -273,8 +390,28 @@ const preReleaseVersions = computed(() =>
   .page-title {
     font-size: 28px;
   }
-  .versions-grid {
-    grid-template-columns: 1fr;
+
+  .page-subtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+
+  .version-date {
+    display: none;
+  }
+
+  .latest-card .version-date {
+    display: inline;
+  }
+
+  .latest-tag {
+    font-size: 18px;
+  }
+
+  .filter-btn {
+    font-size: 12px;
+    gap: 4px;
+    padding: 8px 6px;
   }
 }
 </style>

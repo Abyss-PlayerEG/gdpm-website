@@ -50,17 +50,16 @@ import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
-import { getVersionType } from '../utils/version'
 
 const { t } = useI18n()
-const { versions, loading, error, refresh } = useGitHubReleases()
+const { releasesList, latestTag, loading, error, refresh } = useGitHubReleases()
 
-const latestStable = computed(() => {
-  return versions.value.find(v => getVersionType(v) === 'stable') || ''
-})
+// Strict: only claim "Latest" when GitHub does — no local re-derivation
+const latestStable = computed(() => latestTag.value)
 
 const latestPreRelease = computed(() => {
-  return versions.value.find(v => getVersionType(v) !== 'stable') || ''
+  const pre = releasesList.value.find((r) => r.prerelease)
+  return pre ? pre.tag_name.replace(/^v/, '') : ''
 })
 </script>
 

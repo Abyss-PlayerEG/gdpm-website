@@ -94,7 +94,13 @@ const messages = {
       error: 'Failed to load versions',
       retry: 'Retry',
       back: 'Back',
-      viewAll: 'View all versions'
+      viewAll: 'View all versions',
+      filterAll: 'All',
+      filterStable: 'Stable',
+      filterPre: 'Pre-release',
+      emptyAll: 'No releases yet',
+      emptyStable: 'No stable releases',
+      emptyPre: 'No pre-releases'
     },
     download: {
       back: 'Back',
@@ -102,6 +108,8 @@ const messages = {
       notFoundDesc: 'Version {version} does not exist or has been deleted.',
       goHome: 'Go Home',
       downloads: 'Downloads',
+      downloadBtn: 'Download',
+      copyHash: 'Copy SHA256 checksum',
       install: 'Installation',
       releaseNotes: 'Release Notes',
       noTranslation: 'Chinese translation not available, showing English version.',
@@ -207,7 +215,13 @@ const messages = {
       error: '加载版本失败',
       retry: '重试',
       back: '返回',
-      viewAll: '查看所有版本'
+      viewAll: '查看所有版本',
+      filterAll: '全部',
+      filterStable: '稳定',
+      filterPre: '预发布',
+      emptyAll: '暂无版本',
+      emptyStable: '暂无稳定版本',
+      emptyPre: '暂无预发布版本'
     },
     download: {
       back: '返回',
@@ -215,6 +229,8 @@ const messages = {
       notFoundDesc: '版本 {version} 不存在或已被删除。',
       goHome: '回到首页',
       downloads: '下载',
+      downloadBtn: '下载',
+      copyHash: '复制 SHA256 校验值',
       install: '安装',
       releaseNotes: '更新日志',
       noTranslation: '暂无中文翻译，显示英文版本。',
