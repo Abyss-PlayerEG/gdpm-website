@@ -43,46 +43,42 @@
             <div class="asset-icon">
               <Icon :icon="getPlatformIcon(asset.name)" width="24" height="24" />
             </div>
-            <div class="asset-info">
-              <div class="asset-head">
-                <span class="asset-name">{{ getPlatform(asset.name) }}</span>
-                <span class="asset-size">{{ formatSize(asset.size) }}</span>
-              </div>
-              <div class="asset-tags">
-                <span class="asset-tag tag-arch">{{ getArch(asset.name) }}</span>
-                <span v-if="getVariant(asset.name)" class="asset-tag tag-variant">{{ getVariant(asset.name) }}</span>
-              </div>
-              <div class="asset-actions">
-                <button
-                  v-if="asset.digest"
-                  type="button"
-                  class="asset-hash"
-                  :aria-label="t('download.copyHash')"
-                  @click="copyDigest(asset)"
-                >
-                  <span class="hash-label">SHA256</span>
-                  <Icon
-                    :icon="copiedName === asset.name ? 'ri:check-line' : 'ri:file-copy-line'"
-                    width="16"
-                    height="16"
-                    class="hash-icon"
-                  />
-                </button>
-                <a
-                  :href="asset.browser_download_url"
-                  class="asset-download"
-                  :class="{ loading: downloading === asset.name }"
-                  :aria-label="t('download.downloadBtn')"
-                  @click="onDownloadClick(asset.name)"
-                >
-                  <Icon
-                    :icon="downloading === asset.name ? 'ri:loader-4-line' : 'ri:download-2-line'"
-                    width="18"
-                    height="18"
-                    :class="{ spin: downloading === asset.name }"
-                  />
-                </a>
-              </div>
+            <span class="asset-name">{{ getPlatform(asset.name) }}</span>
+            <div class="asset-tags">
+              <span class="asset-tag tag-arch">{{ getArch(asset.name) }}</span>
+              <span v-if="getVariant(asset.name)" class="asset-tag tag-variant">{{ getVariant(asset.name) }}</span>
+            </div>
+            <div class="asset-side">
+              <span class="asset-size">{{ formatSize(asset.size) }}</span>
+              <button
+                v-if="asset.digest"
+                type="button"
+                class="asset-hash"
+                :aria-label="t('download.copyHash')"
+                @click="copyDigest(asset)"
+              >
+                <span class="hash-label">SHA256</span>
+                <Icon
+                  :icon="copiedName === asset.name ? 'ri:check-line' : 'ri:file-copy-line'"
+                  width="16"
+                  height="16"
+                  class="hash-icon"
+                />
+              </button>
+              <a
+                :href="asset.browser_download_url"
+                class="asset-download"
+                :class="{ loading: downloading === asset.name }"
+                :aria-label="t('download.downloadBtn')"
+                @click="onDownloadClick(asset.name)"
+              >
+                <Icon
+                  :icon="downloading === asset.name ? 'ri:loader-4-line' : 'ri:download-2-line'"
+                  width="18"
+                  height="18"
+                  :class="{ spin: downloading === asset.name }"
+                />
+              </a>
             </div>
           </div>
         </div>
@@ -364,20 +360,24 @@ const getPlatformIcon = (name: string): string => {
 .assets-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 48px;
 }
 
 .asset-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
+  gap: 14px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(30, 41, 59, 0.3) 100%);
   border: 1px solid rgba(51, 65, 85, 0.3);
   text-decoration: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s;
+}
+
+.asset-card:hover {
+  border-color: rgba(71, 140, 191, 0.3);
 }
 
 .asset-icon {
@@ -397,21 +397,24 @@ const getPlatformIcon = (name: string): string => {
   height: 24px;
 }
 
-.asset-info {
-  flex: 1;
+.asset-side {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
 }
 
 .asset-name {
   font-size: 16px;
   font-weight: 600;
   color: #FFFFFF;
+  min-width: 76px;
 }
 
 .asset-tags {
+  flex: 1;
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
@@ -436,23 +439,11 @@ const getPlatformIcon = (name: string): string => {
   color: #478CBF;
 }
 
-.asset-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.asset-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
 .asset-size {
-  font-size: 13px;
-  color: #64748B;
+  min-width: 62px;
+  text-align: right;
+  font-size: 12px;
+  color: #475569;
 }
 
 .install-section {
