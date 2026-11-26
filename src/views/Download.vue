@@ -35,10 +35,9 @@
         <p class="section-title">{{ t('download.downloads') }}</p>
 
         <div class="assets-grid">
-          <a
+          <div
             v-for="asset in assets"
             :key="asset.name"
-            :href="asset.browser_download_url"
             class="asset-card"
           >
             <div class="asset-icon">
@@ -50,30 +49,38 @@
                 <span class="asset-tag tag-arch">{{ getArch(asset.name) }}</span>
                 <span v-if="getVariant(asset.name)" class="asset-tag tag-variant">{{ getVariant(asset.name) }}</span>
               </div>
+              <button
+                v-if="asset.digest"
+                type="button"
+                class="asset-hash"
+                :aria-label="t('download.copyHash')"
+                @click="copyDigest(asset)"
+              >
+                <span class="hash-label">SHA256</span>
+                <Icon
+                  :icon="copiedName === asset.name ? 'ri:check-line' : 'ri:file-copy-line'"
+                  width="16"
+                  height="16"
+                  class="hash-icon"
+                />
+              </button>
             </div>
             <div class="asset-meta">
               <span class="asset-size">{{ formatSize(asset.size) }}</span>
-              <Icon icon="ri:download-2-line" width="16" height="16" />
-            </div>
-          </a>
-        </div>
-
-        <div v-if="assets.some(a => a.digest)" class="checksums-section">
-          <p class="section-title">SHA256</p>
-          <div class="checksum-list">
-            <div v-for="asset in assets" :key="asset.name" class="checksum-item">
-              <div class="checksum-header">
-                <Icon :icon="getPlatformIcon(asset.name)" width="16" height="16" class="checksum-icon" />
-                <span class="checksum-name">{{ asset.name }}</span>
-              </div>
-              <div class="checksum-hash">
-                <code>{{ asset.digest ? asset.digest.replace('sha256:', '') : '-' }}</code>
-                <CopyButton
-                  v-if="asset.digest"
-                  :text="asset.digest.replace('sha256:', '')"
-                  :size="14"
+              <a
+                :href="asset.browser_download_url"
+                class="asset-download"
+                :class="{ loading: downloading === asset.name }"
+                :aria-label="t('download.downloadBtn')"
+                @click="onDownloadClick(asset.name)"
+              >
+                <Icon
+                  :icon="downloading === asset.name ? 'ri:loader-4-line' : 'ri:download-2-line'"
+                  width="18"
+                  height="18"
+                  :class="{ spin: downloading === asset.name }"
                 />
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -111,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
@@ -153,6 +160,40 @@ const hasTranslation = computed(() => {
   const notes = parseReleaseNotes(release.value.body)
   return !!notes.zh
 })
+
+// Download button state: the browser owns the transfer, so there is no
+// event for "started" — the spinner covers the gap until it takes over.
+const downloading = ref<string | null>(null)
+const copiedName = ref<string | null>(null)
+
+const onDownloadClick = (name: string) => {
+  if (downloading.value === name) return
+  downloading.value = name
+  window.setTimeout(() => {
+    if (downloading.value === name) downloading.value = null
+  }, 1500)
+}
+
+const copyDigest = async (asset: { name: string; digest: string }) => {
+  const value = asset.digest.replace('sha256:', '')
+  try {
+    await navigator.clipboard.writeText(value)
+  } catch {
+    // Fallback when the async clipboard API is unavailable or denied
+    const textarea = document.createElement('textarea')
+    textarea.value = value
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+  }
+  copiedName.value = asset.name
+  window.setTimeout(() => {
+    if (copiedName.value === asset.name) copiedName.value = null
+  }, 1500)
+}
 
 const getPlatformIcon = (name: string): string => {
   if (name.includes('linux')) return 'devicon-plain:linux'
@@ -337,11 +378,6 @@ const getPlatformIcon = (name: string): string => {
   transition: all 0.2s;
 }
 
-.asset-card:hover {
-  border-color: rgba(71, 140, 191, 0.4);
-  background: linear-gradient(135deg, rgba(71, 140, 191, 0.1) 0%, rgba(71, 140, 191, 0.05) 100%);
-}
-
 .asset-icon {
   width: 44px;
   height: 44px;
@@ -443,56 +479,67 @@ const getPlatformIcon = (name: string): string => {
   background: rgba(71, 140, 191, 0.2);
 }
 
-.checksums-section {
-  margin-bottom: 48px;
-}
-
-.checksum-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.checksum-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(51, 65, 85, 0.2);
-}
-
-.checksum-header {
+.asset-hash {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  width: 100%;
+  margin-top: 2px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  color: #94A3B8;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
 }
 
-.checksum-icon {
-  color: #478CBF;
+.asset-hash:hover {
+  border-color: rgba(71, 140, 191, 0.4);
+  color: #93C5FD;
+}
+
+.hash-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.hash-icon {
   flex-shrink: 0;
 }
 
-.checksum-name {
-  font-size: 13px;
-  color: #94A3B8;
-  font-family: 'JetBrains Mono', monospace;
-  word-break: break-all;
-}
-
-.checksum-hash {
-  flex: 1;
-  display: flex;
+.asset-download {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(71, 140, 191, 0.15);
+  border: 1px solid rgba(71, 140, 191, 0.3);
+  color: #93C5FD;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.checksum-hash code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: #64748B;
-  word-break: break-all;
+.asset-download:hover {
+  background: rgba(71, 140, 191, 0.3);
+  color: #FFFFFF;
+}
+
+.asset-download.loading {
+  cursor: progress;
+}
+
+/* Pin the icon box so swapping download -> spinner cannot resize the button */
+.asset-download svg {
+  display: block;
+  width: 18px;
+  height: 18px;
 }
 
 .copy-btn-sm {
