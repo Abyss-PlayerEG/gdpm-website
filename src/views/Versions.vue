@@ -231,7 +231,7 @@ const latestRow = computed(() =>
 }
 
 .latest-tag {
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 22px;
   font-weight: 700;
   color: #FFFFFF;
@@ -260,6 +260,9 @@ const latestRow = computed(() =>
   border: 1px solid rgba(51, 65, 85, 0.3);
   color: #94A3B8;
   font-size: 13px;
+  /* CJK fonts report a taller normal line-height than Latin ones, which
+     made the whole bar 4px taller when switching to Chinese */
+  line-height: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -277,7 +280,7 @@ const latestRow = computed(() =>
 }
 
 .filter-count {
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: #64748B;
 }
@@ -311,7 +314,7 @@ const latestRow = computed(() =>
 }
 
 .version-tag {
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
   color: #E2E8F0;
 }
@@ -323,7 +326,7 @@ const latestRow = computed(() =>
 }
 
 .version-date {
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   color: #64748B;
   margin-left: auto;

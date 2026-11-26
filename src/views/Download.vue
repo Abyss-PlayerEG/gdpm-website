@@ -459,7 +459,7 @@ const getPlatformIcon = (name: string): string => {
 .checksum-name {
   font-size: 13px;
   color: #94A3B8;
-  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-family: 'JetBrains Mono', monospace;
   word-break: break-all;
 }
 
