@@ -46,8 +46,10 @@
             </div>
             <div class="asset-info">
               <span class="asset-name">{{ getPlatform(asset.name) }}</span>
-              <span class="asset-arch">{{ getArch(asset.name) }}</span>
-              <span v-if="getVariant(asset.name)" class="asset-variant">{{ getVariant(asset.name) }}</span>
+              <div class="asset-tags">
+                <span class="asset-tag tag-arch">{{ getArch(asset.name) }}</span>
+                <span v-if="getVariant(asset.name)" class="asset-tag tag-variant">{{ getVariant(asset.name) }}</span>
+              </div>
             </div>
             <div class="asset-meta">
               <span class="asset-size">{{ formatSize(asset.size) }}</span>
@@ -370,14 +372,30 @@ const getPlatformIcon = (name: string): string => {
   color: #FFFFFF;
 }
 
-.asset-arch {
-  font-size: 13px;
-  color: #94A3B8;
+.asset-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.asset-variant {
-  font-size: 13px;
-  color: #93C5FD;
+.asset-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
+.tag-arch {
+  background: rgba(160, 174, 192, 0.2);
+  color: #A0AEC0;
+}
+
+.tag-variant {
+  background: rgba(71, 140, 191, 0.2);
+  color: #478CBF;
 }
 
 .asset-meta {
