@@ -114,7 +114,7 @@ import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, getVariant, isPrerelease, parseReleaseNotes } from '../composables/useReleaseDownload'
+import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, getVariant, parseReleaseNotes } from '../composables/useReleaseDownload'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
 import type { VersionType } from '../utils/version'
@@ -125,13 +125,11 @@ const route = useRoute()
 const version = route.params.version as string
 
 const { release, assets, loading, error } = useReleaseDownload(version)
-const { versions } = useGitHubReleases()
+const { latestTag } = useGitHubReleases()
 
 const isLatest = computed(() => {
-  // GitHub's rule: "Latest" goes to the newest release whose prerelease
-  // flag is off — not simply the first entry in the list.
-  const firstStable = versions.value.find(v => !isPrerelease(v))
-  return firstStable === version
+  // GitHub's own designation — identical to what the versions list shows
+  return latestTag.value === version
 })
 
 const versionTags = computed(() => {

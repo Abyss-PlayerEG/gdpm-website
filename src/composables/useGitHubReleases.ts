@@ -18,30 +18,36 @@ interface GitHubRelease {
   assets: GitHubAsset[]
 }
 
-interface CacheData {
+interface ReleasesPayload {
+  latest: string
   releases: GitHubRelease[]
+}
+
+interface CacheData extends ReleasesPayload {
   timestamp: number
 }
 
 const CACHE_KEY = 'gdpm_releases_cache'
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes — release assets/prerelease flags change at publish time
 
-function getCached(): GitHubRelease[] | null {
+function getCached(): ReleasesPayload | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
     const data: CacheData = JSON.parse(raw)
     if (Date.now() - data.timestamp > CACHE_DURATION) return null
-    return data.releases
+    // Legacy entries stored a bare array with no latest designation
+    if (typeof data.latest !== 'string' || !Array.isArray(data.releases)) return null
+    return { latest: data.latest, releases: data.releases }
   } catch {
     return null
   }
 }
 
-function setCache(releases: GitHubRelease[]) {
+function setCache(payload: ReleasesPayload) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({
-      releases,
+      ...payload,
       timestamp: Date.now()
     }))
   } catch {
@@ -50,16 +56,16 @@ function setCache(releases: GitHubRelease[]) {
 }
 
 // Shared cache for all composables
-let cachedReleases: GitHubRelease[] | null = null
+let cachedPayload: ReleasesPayload | null = null
 
 export async function fetchAndCacheReleases(): Promise<void> {
   // Check memory cache first
-  if (cachedReleases) return
+  if (cachedPayload) return
 
   // Check localStorage cache
   const cached = getCached()
   if (cached) {
-    cachedReleases = cached
+    cachedPayload = cached
     return
   }
 
@@ -70,11 +76,19 @@ export async function fetchAndCacheReleases(): Promise<void> {
       throw new Error('Failed to fetch releases')
     }
 
-    const releases: GitHubRelease[] = await response.json()
-    cachedReleases = releases
+    const data = await response.json()
+    // Tolerate an edge-cached response still shaped as the old bare array
+    const payload: ReleasesPayload = Array.isArray(data)
+      ? { latest: '', releases: data }
+      : {
+          latest: typeof data.latest === 'string' ? data.latest : '',
+          releases: Array.isArray(data.releases) ? data.releases : [],
+        }
+
+    cachedPayload = payload
 
     // Cache the result
-    setCache(releases)
+    setCache(payload)
   } catch (e) {
     console.error('Failed to fetch GitHub releases:', e)
     throw e
@@ -83,44 +97,27 @@ export async function fetchAndCacheReleases(): Promise<void> {
 
 export function useGitHubReleases() {
   const versions = ref<string[]>([])
+  const releasesList = ref<GitHubRelease[]>([])
+  const latestTag = ref('')
   const loading = ref(true)
   const error = ref<string | null>(null)
 
   const latestVersion = computed(() => versions.value[0] || '')
 
+  const apply = (payload: ReleasesPayload) => {
+    releasesList.value = payload.releases
+    versions.value = payload.releases.map(r => r.tag_name.replace('v', ''))
+    // GitHub's designation, stripped of the leading v so it lines up with `versions`
+    latestTag.value = payload.latest.replace(/^v/, '')
+  }
+
   const fetchVersions = async () => {
-    // Check memory cache first
-    if (cachedReleases) {
-      versions.value = cachedReleases.map(r => r.tag_name.replace('v', ''))
-      loading.value = false
-      return
-    }
-
-    // Check localStorage cache
-    const cached = getCached()
-    if (cached) {
-      cachedReleases = cached
-      versions.value = cached.map(r => r.tag_name.replace('v', ''))
-      loading.value = false
-      return
-    }
-
     try {
       loading.value = true
       error.value = null
 
-      const response = await fetch('/api/releases')
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch releases')
-      }
-
-      const releases: GitHubRelease[] = await response.json()
-      cachedReleases = releases
-      versions.value = releases.map(r => r.tag_name.replace('v', ''))
-
-      // Cache the result
-      setCache(releases)
+      await fetchAndCacheReleases()
+      if (cachedPayload) apply(cachedPayload)
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Unknown error'
       console.error('Failed to fetch GitHub releases:', e)
@@ -131,12 +128,12 @@ export function useGitHubReleases() {
 
   onMounted(fetchVersions)
 
-  return { versions, latestVersion, loading, error, refresh: fetchVersions }
+  return { versions, releasesList, latestTag, latestVersion, loading, error, refresh: fetchVersions }
 }
 
 export function getReleaseByVersion(version: string): GitHubRelease | null {
-  if (!cachedReleases) return null
-  return cachedReleases.find(r => r.tag_name === `v${version}`) || null
+  if (!cachedPayload) return null
+  return cachedPayload.releases.find(r => r.tag_name === `v${version}`) || null
 }
 
 export function formatSize(bytes: number): string {

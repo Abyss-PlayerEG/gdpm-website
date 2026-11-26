@@ -94,7 +94,13 @@ const messages = {
       error: 'Failed to load versions',
       retry: 'Retry',
       back: 'Back',
-      viewAll: 'View all versions'
+      viewAll: 'View all versions',
+      filterAll: 'All',
+      filterStable: 'Stable',
+      filterPre: 'Pre-release',
+      emptyAll: 'No releases yet',
+      emptyStable: 'No stable releases',
+      emptyPre: 'No pre-releases'
     },
     download: {
       back: 'Back',
@@ -207,7 +213,13 @@ const messages = {
       error: '加载版本失败',
       retry: '重试',
       back: '返回',
-      viewAll: '查看所有版本'
+      viewAll: '查看所有版本',
+      filterAll: '全部',
+      filterStable: '稳定',
+      filterPre: '预发布',
+      emptyAll: '暂无版本',
+      emptyStable: '暂无稳定版本',
+      emptyPre: '暂无预发布版本'
     },
     download: {
       back: '返回',

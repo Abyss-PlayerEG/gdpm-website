@@ -19,51 +19,38 @@
         <button @click="refresh" class="retry-btn">{{ t('versions.retry') }}</button>
       </div>
 
-      <div v-else class="versions-grid">
-        <!-- Stable versions -->
-        <div class="versions-column">
-          <div class="column-header">
-            <Icon icon="ri:checkbox-circle-fill" width="18" height="18" class="icon-stable" />
-            <span>Stable</span>
-          </div>
-          <div class="version-list">
-            <router-link
-              v-for="(version, index) in stableVersions"
-              :key="version"
-              :to="`/version/${version}`"
-              class="version-row"
-            >
-              <div class="version-info">
-                <span class="version-tag">v{{ version }}</span>
-                <span v-if="index === 0" class="version-badge badge-latest">Latest</span>
-              </div>
-              <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
-            </router-link>
-            <div v-if="!stableVersions.length" class="empty">No stable releases</div>
-          </div>
+      <div v-else>
+        <div class="filter-bar" role="tablist">
+          <button
+            v-for="option in filters"
+            :key="option.value"
+            class="filter-btn"
+            :class="{ active: filter === option.value }"
+            :aria-selected="filter === option.value"
+            role="tab"
+            type="button"
+            @click="filter = option.value"
+          >
+            {{ t(option.label) }}
+            <span class="filter-count">{{ counts[option.value] }}</span>
+          </button>
         </div>
 
-        <!-- Pre-release versions -->
-        <div class="versions-column">
-          <div class="column-header">
-            <Icon icon="ri:flask-fill" width="18" height="18" class="icon-pre" />
-            <span>Pre-release</span>
-          </div>
-          <div class="version-list">
-            <router-link
-              v-for="(version, index) in preReleaseVersions"
-              :key="version"
-              :to="`/version/${version}`"
-              class="version-row"
-            >
-              <div class="version-info">
-                <span class="version-tag">v{{ version }}</span>
-                <span v-if="index === 0" class="version-badge badge-pre">Pre-release</span>
-              </div>
-              <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
-            </router-link>
-            <div v-if="!preReleaseVersions.length" class="empty">No pre-releases</div>
-          </div>
+        <div class="version-list">
+          <router-link
+            v-for="row in filteredRows"
+            :key="row.tag"
+            :to="`/version/${row.tag}`"
+            class="version-row"
+          >
+            <div class="version-info">
+              <span class="version-tag">v{{ row.tag }}</span>
+              <span v-if="row.tag === latestTag" class="version-badge badge-latest">Latest</span>
+            </div>
+            <span class="version-date">{{ row.date }}</span>
+            <Icon icon="ri:arrow-right-s-line" width="16" height="16" class="version-arrow" />
+          </router-link>
+          <div v-if="!filteredRows.length" class="empty">{{ emptyText }}</div>
         </div>
       </div>
     </div>
@@ -71,23 +58,50 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
-import { useGitHubReleases, isPrerelease } from '../composables/useGitHubReleases'
+import { useGitHubReleases } from '../composables/useGitHubReleases'
+
+type Filter = 'all' | 'stable' | 'pre'
 
 const { t } = useI18n()
-const { versions, loading, error, refresh } = useGitHubReleases()
+const { releasesList, latestTag, loading, error, refresh } = useGitHubReleases()
 
-// GitHub's prerelease flag decides the column — version-string parsing
-// (0.1.0a1 -> alpha) contradicted releases whose flag was cleared.
-const stableVersions = computed(() =>
-  versions.value.filter(v => !isPrerelease(v))
+const filter = ref<Filter>('all')
+
+const filters: { value: Filter; label: string }[] = [
+  { value: 'all', label: 'versions.filterAll' },
+  { value: 'stable', label: 'versions.filterStable' },
+  { value: 'pre', label: 'versions.filterPre' },
+]
+
+// API returns releases newest-first
+const rows = computed(() =>
+  releasesList.value.map((release) => ({
+    tag: release.tag_name.replace(/^v/, ''),
+    date: release.published_at ? release.published_at.slice(0, 10) : '',
+    prerelease: release.prerelease,
+  }))
 )
 
-const preReleaseVersions = computed(() =>
-  versions.value.filter(v => isPrerelease(v))
-)
+const counts = computed(() => ({
+  all: rows.value.length,
+  stable: rows.value.filter((row) => !row.prerelease).length,
+  pre: rows.value.filter((row) => row.prerelease).length,
+}))
+
+const filteredRows = computed(() => {
+  if (filter.value === 'stable') return rows.value.filter((row) => !row.prerelease)
+  if (filter.value === 'pre') return rows.value.filter((row) => row.prerelease)
+  return rows.value
+})
+
+const emptyText = computed(() => {
+  if (filter.value === 'stable') return t('versions.emptyStable')
+  if (filter.value === 'pre') return t('versions.emptyPre')
+  return t('versions.emptyAll')
+})
 </script>
 
 <style scoped>
@@ -171,39 +185,53 @@ const preReleaseVersions = computed(() =>
   color: #FFFFFF;
 }
 
-.versions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.versions-column {
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
   background: rgba(30, 41, 59, 0.3);
   border: 1px solid rgba(51, 65, 85, 0.3);
-  border-radius: 16px;
-  overflow: hidden;
+  color: #94A3B8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.column-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-  font-size: 15px;
-  font-weight: 600;
+.filter-btn:hover {
+  border-color: rgba(71, 140, 191, 0.5);
   color: #FFFFFF;
 }
 
-.icon-stable {
-  color: #48BB78;
+.filter-btn.active {
+  background: rgba(71, 140, 191, 0.18);
+  border-color: #478CBF;
+  color: #FFFFFF;
 }
 
-.icon-pre {
-  color: #ED8936;
+.filter-count {
+  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-size: 11px;
+  color: #64748B;
+}
+
+.filter-btn.active .filter-count {
+  color: #93C5FD;
 }
 
 .version-list {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: 16px;
   padding: 8px;
   max-height: 600px;
   overflow-y: auto;
@@ -213,6 +241,7 @@ const preReleaseVersions = computed(() =>
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 12px 16px;
   border-radius: 8px;
   text-decoration: none;
@@ -235,6 +264,13 @@ const preReleaseVersions = computed(() =>
   gap: 10px;
 }
 
+.version-date {
+  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-size: 13px;
+  color: #64748B;
+  margin-left: auto;
+}
+
 .version-badge {
   padding: 2px 8px;
   border-radius: 4px;
@@ -246,11 +282,6 @@ const preReleaseVersions = computed(() =>
 .badge-latest {
   background: rgba(71, 140, 191, 0.2);
   color: #478CBF;
-}
-
-.badge-pre {
-  background: rgba(237, 137, 54, 0.2);
-  color: #ED8936;
 }
 
 .version-arrow {
@@ -273,8 +304,14 @@ const preReleaseVersions = computed(() =>
   .page-title {
     font-size: 28px;
   }
-  .versions-grid {
-    grid-template-columns: 1fr;
+
+  .page-subtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+
+  .version-date {
+    display: none;
   }
 }
 </style>
