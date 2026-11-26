@@ -36,6 +36,11 @@
         </router-link>
 
         <div class="filter-bar" role="tablist">
+          <div
+            class="filter-slider"
+            aria-hidden="true"
+            :style="{ transform: `translateX(${filterIndex * 100}%)` }"
+          ></div>
           <button
             v-for="option in filters"
             :key="option.value"
@@ -111,6 +116,11 @@ const filteredRows = computed(() => {
   if (filter.value === 'pre') return rows.value.filter((row) => row.prerelease)
   return rows.value
 })
+
+// Drives the capsule slider: 0 = All, 1 = Stable, 2 = Pre-release
+const filterIndex = computed(() =>
+  filters.findIndex((option) => option.value === filter.value)
+)
 
 const emptyText = computed(() => {
   if (filter.value === 'stable') return t('versions.emptyStable')
@@ -244,38 +254,53 @@ const latestRow = computed(() =>
 }
 
 .filter-bar {
+  position: relative;
   display: flex;
-  gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.5);
+}
+
+/* Three equal segments inside the capsule, one per filter */
+.filter-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / 3);
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  background: #478CBF;
+  transition: transform 0.3s ease;
 }
 
 .filter-btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: rgba(30, 41, 59, 0.3);
-  border: 1px solid rgba(51, 65, 85, 0.3);
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
   color: #94A3B8;
   font-size: 13px;
   /* CJK fonts report a taller normal line-height than Latin ones, which
      made the whole bar 4px taller when switching to Chinese */
   line-height: 18px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 
 .filter-btn:hover {
-  border-color: rgba(71, 140, 191, 0.5);
   color: #FFFFFF;
 }
 
 .filter-btn.active {
-  background: rgba(71, 140, 191, 0.18);
-  border-color: #478CBF;
   color: #FFFFFF;
 }
 
@@ -381,6 +406,12 @@ const latestRow = computed(() =>
 
   .latest-tag {
     font-size: 18px;
+  }
+
+  .filter-btn {
+    font-size: 12px;
+    gap: 4px;
+    padding: 8px 6px;
   }
 }
 </style>
