@@ -20,6 +20,21 @@
       </div>
 
       <div v-else>
+        <router-link
+          v-if="latestRow"
+          :to="`/version/${latestRow.tag}`"
+          class="latest-card"
+        >
+          <div class="latest-card-main">
+            <span class="version-badge badge-latest">Latest</span>
+            <span class="latest-tag">v{{ latestRow.tag }}</span>
+          </div>
+          <div class="latest-card-meta">
+            <span class="version-date">{{ latestRow.date }}</span>
+            <Icon icon="ri:arrow-right-s-line" width="20" height="20" class="version-arrow" />
+          </div>
+        </router-link>
+
         <div class="filter-bar" role="tablist">
           <button
             v-for="option in filters"
@@ -102,6 +117,11 @@ const emptyText = computed(() => {
   if (filter.value === 'pre') return t('versions.emptyPre')
   return t('versions.emptyAll')
 })
+
+// Featured above the filters; the list below keeps it as well
+const latestRow = computed(() =>
+  rows.value.find((row) => row.tag === latestTag.value) ?? null
+)
 </script>
 
 <style scoped>
@@ -183,6 +203,44 @@ const emptyText = computed(() => {
 .retry-btn:hover {
   border-color: #478CBF;
   color: #FFFFFF;
+}
+
+.latest-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  background: rgba(71, 140, 191, 0.12);
+  border: 1px solid rgba(71, 140, 191, 0.4);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.latest-card:hover {
+  background: rgba(71, 140, 191, 0.2);
+  border-color: #478CBF;
+}
+
+.latest-card-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.latest-tag {
+  font-family: 'JetBrains Mono Nerd Font', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.latest-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .filter-bar {
@@ -312,6 +370,14 @@ const emptyText = computed(() => {
 
   .version-date {
     display: none;
+  }
+
+  .latest-card .version-date {
+    display: inline;
+  }
+
+  .latest-tag {
+    font-size: 18px;
   }
 }
 </style>
