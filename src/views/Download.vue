@@ -58,17 +58,27 @@
                 @click="copyDigest(asset)"
               >
                 <span class="hash-label">SHA256</span>
-                <Icon
-                  :icon="copiedName === asset.name ? 'ri:check-line' : 'ri:file-copy-line'"
-                  width="16"
-                  height="16"
-                  class="hash-icon"
-                />
+                <span class="hash-icons">
+                  <Icon
+                    icon="ri:file-copy-line"
+                    width="16"
+                    height="16"
+                    class="icon-copy"
+                    :class="{ copied: copiedName === asset.name }"
+                  />
+                  <Icon
+                    icon="ri:check-line"
+                    width="16"
+                    height="16"
+                    class="icon-check"
+                    :class="{ copied: copiedName === asset.name }"
+                  />
+                </span>
               </button>
               <a
                 :href="asset.browser_download_url"
                 class="asset-download"
-                :class="{ loading: downloading === asset.name }"
+                :class="{ 'is-loading': downloading === asset.name }"
                 :aria-label="t('download.downloadBtn')"
                 @click="onDownloadClick(asset.name)"
               >
@@ -507,8 +517,40 @@ const getPlatformIcon = (name: string): string => {
   letter-spacing: 0.06em;
 }
 
-.hash-icon {
+/* Cross-fade like CopyButton: both icons stacked, opacity swaps */
+.hash-icons {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+}
+
+.hash-icons .icon-copy,
+.hash-icons .icon-check {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hash-icons .icon-copy {
+  opacity: 1;
+}
+
+.hash-icons .icon-check {
+  opacity: 0;
+  color: #48BB78;
+}
+
+.hash-icons .icon-copy.copied {
+  opacity: 0;
+}
+
+.hash-icons .icon-check.copied {
+  opacity: 1;
 }
 
 .asset-download {
@@ -531,7 +573,9 @@ const getPlatformIcon = (name: string): string => {
   color: #FFFFFF;
 }
 
-.asset-download.loading {
+/* NOTE: not `.loading` — Download.vue already uses that class for the
+   page-level spinner (padding: 80px) and it would inflate this button. */
+.asset-download.is-loading {
   cursor: progress;
 }
 
