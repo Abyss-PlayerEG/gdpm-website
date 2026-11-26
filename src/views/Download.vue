@@ -722,5 +722,12 @@ const getPlatformIcon = (name: string): string => {
   .version-title {
     font-size: 36px;
   }
+
+  /* Mobile: the icon already says which platform, and the size is
+     secondary — dropping both keeps one row per asset readable. */
+  .asset-name,
+  .asset-size {
+    display: none;
+  }
 }
 </style>
