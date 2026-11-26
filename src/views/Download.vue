@@ -44,43 +44,45 @@
               <Icon :icon="getPlatformIcon(asset.name)" width="24" height="24" />
             </div>
             <div class="asset-info">
-              <span class="asset-name">{{ getPlatform(asset.name) }}</span>
+              <div class="asset-head">
+                <span class="asset-name">{{ getPlatform(asset.name) }}</span>
+                <span class="asset-size">{{ formatSize(asset.size) }}</span>
+              </div>
               <div class="asset-tags">
                 <span class="asset-tag tag-arch">{{ getArch(asset.name) }}</span>
                 <span v-if="getVariant(asset.name)" class="asset-tag tag-variant">{{ getVariant(asset.name) }}</span>
               </div>
-              <button
-                v-if="asset.digest"
-                type="button"
-                class="asset-hash"
-                :aria-label="t('download.copyHash')"
-                @click="copyDigest(asset)"
-              >
-                <span class="hash-label">SHA256</span>
-                <Icon
-                  :icon="copiedName === asset.name ? 'ri:check-line' : 'ri:file-copy-line'"
-                  width="16"
-                  height="16"
-                  class="hash-icon"
-                />
-              </button>
-            </div>
-            <div class="asset-meta">
-              <span class="asset-size">{{ formatSize(asset.size) }}</span>
-              <a
-                :href="asset.browser_download_url"
-                class="asset-download"
-                :class="{ loading: downloading === asset.name }"
-                :aria-label="t('download.downloadBtn')"
-                @click="onDownloadClick(asset.name)"
-              >
-                <Icon
-                  :icon="downloading === asset.name ? 'ri:loader-4-line' : 'ri:download-2-line'"
-                  width="18"
-                  height="18"
-                  :class="{ spin: downloading === asset.name }"
-                />
-              </a>
+              <div class="asset-actions">
+                <button
+                  v-if="asset.digest"
+                  type="button"
+                  class="asset-hash"
+                  :aria-label="t('download.copyHash')"
+                  @click="copyDigest(asset)"
+                >
+                  <span class="hash-label">SHA256</span>
+                  <Icon
+                    :icon="copiedName === asset.name ? 'ri:check-line' : 'ri:file-copy-line'"
+                    width="16"
+                    height="16"
+                    class="hash-icon"
+                  />
+                </button>
+                <a
+                  :href="asset.browser_download_url"
+                  class="asset-download"
+                  :class="{ loading: downloading === asset.name }"
+                  :aria-label="t('download.downloadBtn')"
+                  @click="onDownloadClick(asset.name)"
+                >
+                  <Icon
+                    :icon="downloading === asset.name ? 'ri:loader-4-line' : 'ri:download-2-line'"
+                    width="18"
+                    height="18"
+                    :class="{ spin: downloading === asset.name }"
+                  />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -434,15 +436,23 @@ const getPlatformIcon = (name: string): string => {
   color: #478CBF;
 }
 
-.asset-meta {
+.asset-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  color: #64748B;
+}
+
+.asset-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .asset-size {
   font-size: 13px;
+  color: #64748B;
 }
 
 .install-section {
@@ -480,13 +490,12 @@ const getPlatformIcon = (name: string): string => {
 }
 
 .asset-hash {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  margin-top: 2px;
-  padding: 6px 10px;
+  gap: 10px;
+  height: 34px;
+  padding: 0 12px;
   border-radius: 8px;
   background: rgba(30, 41, 59, 0.4);
   border: 1px solid rgba(51, 65, 85, 0.3);
