@@ -1,10 +1,13 @@
 /**
- * Docs data layer: pure logic over the godot-gdpm repository's `docs/`
- * directory. No Vue, no localStorage — caching lives in the composables,
- * so this module can be verified outside the browser.
+ * Docs data layer: fetches the godot-gdpm repository's `docs/` directory
+ * through the same-origin `/api/docs` proxy — the same pattern as
+ * `/api/releases`, so the browser never talks to GitHub/jsDelivr directly
+ * (no CORS, no client-side proxy quirks; the server side owns upstream
+ * selection and caching). No Vue, no localStorage here — caching lives in
+ * the composables, so this module can be verified outside the browser.
  *
- * Layout consumed here:
- * - docs/docs.json                 shared config (source templates, versions, languages)
+ * Layout consumed (repo-relative paths passed to the proxy):
+ * - docs/docs.json                 shared config (versions, languages, …)
  * - docs/<tag>/docs.json           self-contained version nav (bilingual labels)
  * - docs/<tag>/<lang>/<file>.md    pages
  */
@@ -53,71 +56,24 @@ export interface DocPage {
   lang: string
 }
 
-/**
- * Where docs/docs.json itself lives — must be known before the config can
- * be read. Page fetches use the `source.ref` inside the config instead.
- * `ref` stays on `dev` while the docs feature develops so config tweaks on
- * godot-gdpm's dev branch are visible immediately; switch to `main` for
- * production stability once the feature ships.
- */
-export const DOCS_BOOTSTRAP = {
-  repo: 'Abyss-PlayerEG/godot-gdpm',
-  ref: 'dev',
-  path: 'docs/docs.json',
-} as const
-
-function bootstrapUrls(): DocsTemplates {
-  const { repo, ref, path } = DOCS_BOOTSTRAP
-  return {
-    cdn: `https://cdn.jsdelivr.net/gh/${repo}@${ref}/${path}`,
-    raw: `https://raw.githubusercontent.com/${repo}/${ref}/${path}`,
-  }
-}
-
-export const DOCS_BOOTSTRAP_URLS: DocsTemplates = bootstrapUrls()
-
-// A hung connection must not stall the fallback chain (cdn → raw → …).
+// A hung connection must not stall the request (the proxy has its own
+// upstream timeout; this one guards the same-origin hop too).
 const FETCH_TIMEOUT_MS = 10_000
 
-function fillTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (match, key: string) => vars[key] ?? match)
+function docsUrl(path: string): string {
+  return `/api/docs?path=${encodeURIComponent(path)}`
 }
 
-function repoRoot(config: DocsSharedConfig, kind: keyof DocsTemplates): string {
-  const template = config.source.templates[kind]
-  const marker = '{version}'
-  const idx = template.indexOf(marker)
-  if (idx < 0) throw new Error(`docs template missing {version}: ${template}`)
-  return fillTemplate(template.slice(0, idx), {
-    repo: config.repo,
-    ref: config.source.ref,
-  })
-}
-
-/** URL of a version's self-contained docs.json (…/docs/<tag>/docs.json). */
-export function versionConfigUrl(
-  config: DocsSharedConfig,
-  tag: string,
-  kind: keyof DocsTemplates,
-): string {
-  return `${repoRoot(config, kind)}${tag}/docs.json`
-}
-
-/** URL of a markdown page (…/docs/<tag>/<lang>/<file>). */
-export function docPageUrl(
-  config: DocsSharedConfig,
-  tag: string,
-  lang: string,
-  file: string,
-  kind: keyof DocsTemplates,
-): string {
-  return fillTemplate(config.source.templates[kind], {
-    repo: config.repo,
-    ref: config.source.ref,
-    version: tag,
-    lang,
-    file,
-  })
+async function fetchDocs(path: string): Promise<string> {
+  const url = docsUrl(path)
+  let res: Response
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
+  } catch (e) {
+    throw new Error(`${e instanceof Error ? e.message : String(e)} ← ${url}`, { cause: e })
+  }
+  if (!res.ok) throw new Error(`${res.status} ← ${url}`)
+  return res.text()
 }
 
 function isValidSharedConfig(data: unknown): data is DocsSharedConfig {
@@ -140,59 +96,32 @@ function isValidVersionNav(data: unknown): data is DocsVersionConfig {
   return !!nav && typeof nav === 'object' && Array.isArray(nav.nav)
 }
 
-/**
- * Fetch the shared config, jsDelivr first, raw.githubusercontent as fallback.
- * Validation runs *inside* the chain: jsDelivr caches branch files for ~12h,
- * so a stale-but-200 response must fall through to raw, not throw.
- */
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return null
+  }
+}
+
+/** Fetch the shared config through the docs proxy, shape-validated. */
 export async function fetchSharedConfig(): Promise<DocsSharedConfig> {
-  const urls = DOCS_BOOTSTRAP_URLS
-  let last = 'unreachable'
-  for (const url of [urls.cdn, urls.raw]) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
-      if (res.ok) {
-        const data: unknown = await res.json()
-        if (isValidSharedConfig(data)) return data
-        last = `stale/invalid config ← ${url}`
-      } else {
-        last = `${res.status} ← ${url}`
-      }
-    } catch (e) {
-      last = `${e instanceof Error ? e.message : String(e)} ← ${url}`
-    }
-  }
-  throw new Error(last)
+  const data = parseJson(await fetchDocs('docs/docs.json'))
+  if (!isValidSharedConfig(data)) throw new Error('stale/invalid config')
+  return data
 }
 
-/** Fetch one version's docs.json (cdn → raw, validating inside the chain). */
-export async function fetchVersionNav(
-  config: DocsSharedConfig,
-  tag: string,
-): Promise<DocsVersionConfig> {
-  let last = 'unreachable'
-  for (const kind of ['cdn', 'raw'] as const) {
-    const url = versionConfigUrl(config, tag, kind)
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
-      if (res.ok) {
-        const data: unknown = await res.json()
-        if (isValidVersionNav(data)) return data
-        last = `stale/invalid nav ← ${url}`
-      } else {
-        last = `${res.status} ← ${url}`
-      }
-    } catch (e) {
-      last = `${e instanceof Error ? e.message : String(e)} ← ${url}`
-    }
-  }
-  throw new Error(last)
+/** Fetch one version's docs.json through the docs proxy, shape-validated. */
+export async function fetchVersionNav(tag: string): Promise<DocsVersionConfig> {
+  const data = parseJson(await fetchDocs(`docs/${tag}/docs.json`))
+  if (!isValidVersionNav(data)) throw new Error('stale/invalid nav')
+  return data
 }
 
 /**
- * Fetch a markdown page: cdn → raw for the requested language, then the
- * same pair for the default language (mkdocs-i18n style fallback).
- * `page.lang` reports the language that actually resolved.
+ * Fetch a markdown page: the requested language first, then the default
+ * language (mkdocs-i18n style fallback). `page.lang` reports the language
+ * that actually resolved.
  */
 export async function fetchDocPage(
   config: DocsSharedConfig,
@@ -202,22 +131,14 @@ export async function fetchDocPage(
 ): Promise<DocPage> {
   const defaultLang =
     config.languages.find((l) => l.default)?.folder ?? config.languages[0]?.folder ?? 'en'
-  const attempts: Array<[string, keyof DocsTemplates]> = [
-    [lang, 'cdn'],
-    [lang, 'raw'],
-  ]
-  if (lang !== defaultLang) {
-    attempts.push([defaultLang, 'cdn'], [defaultLang, 'raw'])
-  }
+  const attempts = lang !== defaultLang ? [lang, defaultLang] : [lang]
   let last = 'unreachable'
-  for (const [tryLang, kind] of attempts) {
-    const url = docPageUrl(config, tag, tryLang, file, kind)
+  for (const tryLang of attempts) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
-      if (res.ok) return { text: await res.text(), lang: tryLang }
-      last = `${res.status} ← ${url}`
+      const text = await fetchDocs(`docs/${tag}/${tryLang}/${file}`)
+      return { text, lang: tryLang }
     } catch (e) {
-      last = `${e instanceof Error ? e.message : String(e)} ← ${url}`
+      last = e instanceof Error ? e.message : String(e)
     }
   }
   throw new Error(last)

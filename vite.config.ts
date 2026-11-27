@@ -62,9 +62,87 @@ function releasesApi(): Plugin {
   }
 }
 
+// Mirrors functions/api/docs.ts — same-origin docs proxy so the browser
+// never fetches GitHub/jsDelivr directly. raw first (fresh; a 404 there is
+// authoritative), jsDelivr only as an availability fallback.
+// Dev needs NODE_USE_ENV_PROXY=1 for node fetch to reach the network.
+const DOCS_REF = 'dev'
+const DOCS_VALID_PATH = /^docs\/[A-Za-z0-9._\-/]+\.(json|md)$/
+
+function docsApi(): Plugin {
+  const rawBase = `https://raw.githubusercontent.com/Abyss-PlayerEG/godot-gdpm/${DOCS_REF}/`
+  const cdnBase = `https://cdn.jsdelivr.net/gh/Abyss-PlayerEG/godot-gdpm@${DOCS_REF}/`
+
+  const handler = async (req: IncomingMessage, res: ServerResponse) => {
+    const path = new URL(req.url ?? '/', 'http://localhost').searchParams.get('path') ?? ''
+
+    const fail = (status: number, error: string) => {
+      res.statusCode = status
+      res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      res.end(JSON.stringify({ error }))
+    }
+
+    if (!DOCS_VALID_PATH.test(path) || path.includes('..')) {
+      fail(400, 'invalid path')
+      return
+    }
+
+    const serve = (body: string) => {
+      res.setHeader(
+        'Content-Type',
+        path.endsWith('.json')
+          ? 'application/json; charset=utf-8'
+          : 'text/plain; charset=utf-8',
+      )
+      res.setHeader('Cache-Control', 'public, max-age=300')
+      res.end(body)
+    }
+
+    let last = 'unreachable'
+
+    try {
+      const upstream = await fetch(rawBase + path, { signal: AbortSignal.timeout(10_000) })
+      if (upstream.ok) {
+        serve(await upstream.text())
+        return
+      }
+      if (upstream.status === 404) {
+        fail(404, `404 ← ${rawBase}${path}`)
+        return
+      }
+      last = `${upstream.status} ← raw`
+    } catch (e) {
+      last = `${e instanceof Error ? e.message : String(e)} ← raw`
+    }
+
+    try {
+      const upstream = await fetch(cdnBase + path, { signal: AbortSignal.timeout(10_000) })
+      if (upstream.ok) {
+        serve(await upstream.text())
+        return
+      }
+      last = `${upstream.status} ← cdn (${last})`
+    } catch (e) {
+      last = `${e instanceof Error ? e.message : String(e)} ← cdn (${last})`
+    }
+
+    fail(/404/.test(last) ? 404 : 502, last)
+  }
+
+  return {
+    name: 'gdpm-docs-api',
+    configureServer(server) {
+      server.middlewares.use('/api/docs', handler)
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use('/api/docs', handler)
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools(), releasesApi()],
+  plugins: [vue(), vueDevTools(), releasesApi(), docsApi()],
   server: {
     host: true,
     port: 8090,

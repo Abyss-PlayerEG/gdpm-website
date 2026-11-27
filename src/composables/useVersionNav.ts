@@ -10,13 +10,10 @@ interface CachedNav {
 
 const navCache = new Map<string, CachedNav>()
 
-export async function loadVersionNav(
-  config: DocsSharedConfig,
-  tag: string,
-): Promise<DocsVersionConfig> {
+export async function loadVersionNav(tag: string): Promise<DocsVersionConfig> {
   const hit = navCache.get(tag)
   if (hit && Date.now() - hit.timestamp < CACHE_DURATION) return hit.data
-  const data = await fetchVersionNav(config, tag)
+  const data = await fetchVersionNav(tag)
   navCache.set(tag, { data, timestamp: Date.now() })
   return data
 }
@@ -47,7 +44,7 @@ export function useVersionNav(
       loading.value = true
       error.value = null
       try {
-        const data = await loadVersionNav(currentConfig, currentTag)
+        const data = await loadVersionNav(currentTag)
         if (current === epoch) nav.value = data
       } catch (e) {
         if (current === epoch) {
