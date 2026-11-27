@@ -1,5 +1,6 @@
 <template>
   <aside class="docs-sidebar" :class="{ open: drawerOpen }">
+    <p class="docs-sidebar-title">{{ t('docs.menu') }}</p>
     <div class="docs-sidebar-section docs-sidebar-version">
       <p class="docs-sidebar-caption">{{ t('docs.version') }}</p>
       <DocsVersionSelect :versions="config.versions" :current="currentTag" @select="switchVersion" />
@@ -117,6 +118,11 @@ function switchVersion(tag: string): void {
   align-self: flex-start;
 }
 
+/* Panel name — only meaningful for the mobile drawer */
+.docs-sidebar-title {
+  display: none;
+}
+
 .docs-sidebar-section {
   margin-bottom: 20px;
 }
@@ -203,9 +209,18 @@ function switchVersion(tag: string): void {
     padding: 84px 20px 24px;
     background: #0F172A;
     border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0 16px 16px 0;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
+  }
+
+  .docs-sidebar-title {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 22px;
   }
 
   .docs-sidebar.open {
