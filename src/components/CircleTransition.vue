@@ -27,8 +27,13 @@ const circleStyle = computed(() => ({
 onMounted(() => {
   let isTransitioning = false
 
+  const isDocsPath = (p: string) => p === '/docs' || p.startsWith('/docs/')
+
   router.beforeEach((to, from) => {
     if (to.path === from.path) return
+    // Navigation inside the docs section is content browsing: no circle
+    // animation and no 400ms hold — only entering/leaving /docs transitions.
+    if (isDocsPath(to.path) && isDocsPath(from.path)) return
     if (isTransitioning) return
 
     isTransitioning = true
