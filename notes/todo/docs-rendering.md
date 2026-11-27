@@ -163,4 +163,6 @@ src/
    （cdn 卡住则永远轮不到 raw，页面卡 Loading；实测代理环境会遇到）
 7. **开发环境限制**（非代码问题）：本机浏览器到 jsdelivr 的代理隧道间歇失败（raw 兜底接住）；
    vite `/api/releases` 中间件需 `NODE_USE_ENV_PROXY=1` 才能出网，且无 `.dev.vars` token 时
-   GitHub 限流 403 → Latest 徽标缺失（生产 Cloudflare 有 token，不受影响）
+   GitHub 限流 403 → releases 拉不到 → Latest 徽标消失（`useGitHubReleases` 的失败不进缓存，
+   配好 token 后刷新即恢复）。**本地已配 `.dev.vars`（gh auth token，已 gitignore）**；
+   生产 Cloudflare 有 token，不受影响
