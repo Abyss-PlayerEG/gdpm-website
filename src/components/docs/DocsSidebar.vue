@@ -4,8 +4,9 @@
       <p class="docs-sidebar-caption">{{ t('docs.version') }}</p>
       <DocsVersionSelect :versions="config.versions" :current="currentTag" @select="switchVersion" />
     </div>
-    <Transition name="docs-nav" mode="out-in">
-      <nav v-if="nav" :key="nav.tag" class="docs-nav">
+    <Transition name="docs-nav" mode="out-in" @after-enter="updateIndicator">
+      <nav v-if="nav" ref="navRef" :key="nav.tag" class="docs-nav">
+        <span class="docs-nav-indicator" :style="indicatorStyle"></span>
         <router-link
           v-for="entry in nav.nav"
           :key="entry.file"
@@ -22,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { DocsNavEntry, DocsSharedConfig, DocsVersionConfig } from '../../utils/docs'
@@ -45,6 +46,33 @@ const cleanVersion = computed(() => props.version.replace(/^v/, ''))
 const currentTag = computed(() => (cleanVersion.value ? `v${cleanVersion.value}` : ''))
 const defaultLang = computed(
   () => props.config.languages.find((l) => l.default)?.folder ?? 'en',
+)
+
+// Sliding active-item indicator: repositioned after every page or TOC change.
+const navRef = ref<HTMLElement | null>(null)
+const indicatorStyle = ref<Record<string, string>>({
+  transform: 'translateY(0px)',
+  height: '0px',
+})
+
+function updateIndicator(): void {
+  const nav = navRef.value
+  const active = nav?.querySelector<HTMLElement>('.docs-nav-link.active')
+  if (!nav || !active) return
+  indicatorStyle.value = {
+    transform: `translateY(${active.offsetTop}px)`,
+    height: `${active.offsetHeight}px`,
+  }
+}
+
+// Page change: same TOC, reposition now. Version change: the new list only
+// exists after the out-in transition, which @after-enter also covers.
+watch(
+  [() => props.nav, () => props.page],
+  () => {
+    void nextTick(updateIndicator)
+  },
+  { immediate: true },
 )
 
 function linkTo(file: string): { name: string; params: Record<string, string> } {
@@ -103,10 +131,22 @@ function switchVersion(tag: string): void {
 }
 
 .docs-nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.docs-nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  background: #478CBF;
+  border-radius: 1px;
+  pointer-events: none;
+  transition: transform 0.25s ease, height 0.25s ease;
 }
 
 /* Version switch: the table of contents slides over to the new list */
@@ -139,7 +179,6 @@ function switchVersion(tag: string): void {
 }
 
 .docs-nav-link.active {
-  border-left-color: #478CBF;
   color: #478CBF;
   font-weight: 600;
 }
