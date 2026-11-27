@@ -45,12 +45,23 @@
           </div>
         </div>
       </div>
+      <router-link
+        to="/docs"
+        class="docs-link"
+        data-animate="fadeUp"
+        data-delay="0.65"
+      >
+        <Icon icon="ri:book-2-line" width="18" height="18" />
+        {{ t('quickstart.viewDocs') }}
+        <Icon icon="ri:arrow-right-line" width="16" height="16" />
+      </router-link>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { Icon } from '@iconify/vue'
 import CopyButton from './CopyButton.vue'
 
 const { t } = useI18n()
@@ -214,6 +225,10 @@ const { t } = useI18n()
   .code-block code {
     font-size: 12px;
     word-break: break-all;
+  }
+  .docs-link {
+    font-size: 16px;
+    padding: 10px 0;
   }
 }
 </style>

@@ -6,10 +6,12 @@ const messages = {
       home: 'Home',
       download: 'Download',
       versions: 'Versions',
+      docs: 'Docs',
       notFound: '404'
     },
     nav: {
       versions: 'All Versions',
+      docs: 'Docs',
       github: 'GitHub',
       pypi: 'PyPI'
     },
@@ -74,7 +76,8 @@ const messages = {
       step1Title: 'Install GDPM',
       step2Title: 'Initialize your project or create a new one',
       step3Title: 'Add plugins',
-      or: 'or'
+      or: 'or',
+      viewDocs: 'View Documentation'
     },
     community: {
       title: 'Community',
@@ -120,6 +123,20 @@ const messages = {
       message: 'Page not found',
       redirect: 'Redirecting in {seconds} seconds...',
       goHome: 'Go Home'
+    },
+    docs: {
+      loading: 'Loading documentation...',
+      error: 'Failed to load documentation',
+      retry: 'Retry',
+      versionNotFound: 'No documentation for this version',
+      notFound: 'Page not found',
+      fallbackNotice: 'This page is not available in the selected language, showing the default language version.',
+      backToIndex: 'Go to index',
+      tryLatest: 'View latest documentation',
+      previous: 'Previous',
+      next: 'Next',
+      menu: 'Menu',
+      version: 'Version'
     }
   },
   zh: {
@@ -127,10 +144,12 @@ const messages = {
       home: '首页',
       download: '下载',
       versions: '版本列表',
+      docs: '文档',
       notFound: '404'
     },
     nav: {
       versions: '全部版本',
+      docs: '文档',
       github: 'GitHub',
       pypi: 'PyPI'
     },
@@ -195,7 +214,8 @@ const messages = {
       step1Title: '安装 GDPM',
       step2Title: '初始化项目或创建新项目',
       step3Title: '添加插件',
-      or: '或'
+      or: '或',
+      viewDocs: '查看文档'
     },
     community: {
       title: '社区',
@@ -241,6 +261,20 @@ const messages = {
       message: '页面未找到',
       redirect: '{seconds} 秒后返回首页...',
       goHome: '回到首页'
+    },
+    docs: {
+      loading: '加载文档中...',
+      error: '文档加载失败',
+      retry: '重试',
+      versionNotFound: '该版本没有文档',
+      notFound: '页面不存在',
+      fallbackNotice: '该页面暂无所选语言版本，已显示默认语言版本。',
+      backToIndex: '返回本版首页',
+      tryLatest: '查看最新文档',
+      previous: '上一页',
+      next: '下一页',
+      menu: '目录',
+      version: '版本'
     }
   }
 }
