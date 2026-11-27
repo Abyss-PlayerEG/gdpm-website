@@ -4,18 +4,20 @@
       <p class="docs-sidebar-caption">{{ t('docs.version') }}</p>
       <DocsVersionSelect :versions="config.versions" :current="currentTag" @select="switchVersion" />
     </div>
-    <nav v-if="nav" class="docs-nav">
-      <router-link
-        v-for="entry in nav.nav"
-        :key="entry.file"
-        :to="linkTo(entry.file)"
-        class="docs-nav-link"
-        :class="{ active: isActive(entry.file) }"
-        @click="emit('navigate')"
-      >
-        {{ labelOf(entry) }}
-      </router-link>
-    </nav>
+    <Transition name="docs-nav" mode="out-in">
+      <nav v-if="nav" :key="nav.tag" class="docs-nav">
+        <router-link
+          v-for="entry in nav.nav"
+          :key="entry.file"
+          :to="linkTo(entry.file)"
+          class="docs-nav-link"
+          :class="{ active: isActive(entry.file) }"
+          @click="emit('navigate')"
+        >
+          {{ labelOf(entry) }}
+        </router-link>
+      </nav>
+    </Transition>
   </aside>
 </template>
 
@@ -105,6 +107,22 @@ function switchVersion(tag: string): void {
   flex-direction: column;
   gap: 2px;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Version switch: the table of contents slides over to the new list */
+.docs-nav-enter-active,
+.docs-nav-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.docs-nav-enter-from {
+  opacity: 0;
+  transform: translateX(14px);
+}
+
+.docs-nav-leave-to {
+  opacity: 0;
+  transform: translateX(-14px);
 }
 
 .docs-nav-link {
