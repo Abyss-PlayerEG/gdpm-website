@@ -50,7 +50,9 @@ raw: https://raw.githubusercontent.com/{repo}/{ref}/docs/{version}/{lang}/{file}
 ```
 
 - 缺省 `version` = 与 `latestTag` 匹配的文档版本，否则 `versions[0]`
-- 缺省 `lang` = `languages` 中 `default: true` 的语言（en）
+- 缺省 `lang` = **站点语言**（vue-i18n locale）；顶栏 EN/中文 是全站唯一语言开关——
+  在文档页切换会联动改写 URL `:lang`，打开分享的 `/docs/…/zh/…` 链接则在会话内
+  把站点语言切到 zh（URL 与 locale 双向同步，侧栏不再放语言选择器）
 - 缺省 `page` = `index.md`
 - `/docs` → `router.replace` 补全为规范 URL
 - 每页 `document.title` = nav 标签 + 版本号
@@ -86,9 +88,8 @@ raw: https://raw.githubusercontent.com/{repo}/{ref}/docs/{version}/{lang}/{file}
 src/
 ├── views/Docs.vue                    ← 布局：侧栏 + 内容 + 移动端抽屉
 ├── components/docs/
-│   ├── DocsSidebar.vue               ← nav 列表 + 版本选择 + 语言切换
+│   ├── DocsSidebar.vue               ← nav 列表 + 版本选择（语言走顶栏开关）
 │   ├── DocsVersionSelect.vue         ← 版本下拉 + Latest/渠道徽标
-│   ├── DocsLangSwitch.vue            ← en/zh 切换
 │   └── MarkdownView.vue              ← v-html + 事件委托（tab 切换、复制）
 ├── composables/
 │   ├── useDocsConfig.ts

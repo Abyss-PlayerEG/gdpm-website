@@ -4,12 +4,6 @@
       <button class="docs-mobile-btn" type="button" @click="drawerOpen = !drawerOpen">
         ☰ {{ t('docs.menu') }}
       </button>
-      <DocsLangSwitch
-        v-if="config"
-        :languages="config.languages"
-        :current="langParam"
-        @select="switchLang"
-      />
     </div>
 
     <div v-if="drawerOpen" class="docs-drawer-overlay" @click="drawerOpen = false"></div>
@@ -61,12 +55,11 @@ import { useDocPage } from '../composables/useDocPage'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType } from '../utils/version'
 import DocsSidebar from '../components/docs/DocsSidebar.vue'
-import DocsLangSwitch from '../components/docs/DocsLangSwitch.vue'
 import MarkdownView from '../components/docs/MarkdownView.vue'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const { config, error: configError, reload: reloadConfig } = useDocsConfig()
 const { latestTag } = useGitHubReleases()
@@ -115,12 +108,11 @@ watch(
   (cfg) => {
     if (!cfg) return
     if (versionParam.value && langParam.value && pageParam.value) return
-    const defaultLang = cfg.languages.find((l) => l.default)?.folder ?? 'en'
     router.replace({
       name: 'docs',
       params: {
         version: (versionParam.value || pickDefaultVersion()).replace(/^v/, ''),
-        lang: langParam.value || defaultLang,
+        lang: langParam.value || locale.value,
         page: pageParam.value || 'index',
       },
     })
@@ -128,17 +120,31 @@ watch(
   { immediate: true },
 )
 
-function switchLang(folder: string): void {
-  if (!config.value) return
-  router.push({
-    name: 'docs',
-    params: {
-      version: versionParam.value.replace(/^v/, '') || pickDefaultVersion().replace(/^v/, ''),
-      lang: folder,
-      page: pageParam.value || 'index',
-    },
-  })
-}
+// The header switcher is the single language control: the site locale and
+// the URL :lang stay in lockstep. A shared /docs/…/zh/… link flips the site
+// language for the session; toggling the header rewrites the docs URL.
+watch(
+  langParam,
+  (lang) => {
+    if (lang && lang !== locale.value) locale.value = lang
+  },
+  { immediate: true },
+)
+
+watch(locale, (lang) => {
+  if (route.name !== 'docs' || !versionParam.value) return
+  const current = paramValue('lang')
+  if (current && current !== lang) {
+    router.replace({
+      name: 'docs',
+      params: {
+        version: versionParam.value.replace(/^v/, ''),
+        lang,
+        page: pageParam.value || 'index',
+      },
+    })
+  }
+})
 </script>
 
 <style scoped>

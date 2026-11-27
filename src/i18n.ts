@@ -130,8 +130,7 @@ const messages = {
       versionNotFound: 'No documentation for this version',
       notFound: 'Page not found',
       menu: 'Menu',
-      version: 'Version',
-      language: 'Language'
+      version: 'Version'
     }
   },
   zh: {
@@ -263,8 +262,7 @@ const messages = {
       versionNotFound: '该版本没有文档',
       notFound: '页面不存在',
       menu: '目录',
-      version: '版本',
-      language: '语言'
+      version: '版本'
     }
   }
 }

@@ -4,10 +4,6 @@
       <p class="docs-sidebar-caption">{{ t('docs.version') }}</p>
       <DocsVersionSelect :versions="config.versions" :current="currentTag" @select="switchVersion" />
     </div>
-    <div class="docs-sidebar-section">
-      <p class="docs-sidebar-caption">{{ t('docs.language') }}</p>
-      <DocsLangSwitch :languages="config.languages" :current="lang" @select="switchLang" />
-    </div>
     <nav v-if="nav" class="docs-nav">
       <router-link
         v-for="entry in nav.nav"
@@ -29,7 +25,6 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { DocsNavEntry, DocsSharedConfig, DocsVersionConfig } from '../../utils/docs'
 import DocsVersionSelect from './DocsVersionSelect.vue'
-import DocsLangSwitch from './DocsLangSwitch.vue'
 
 const props = defineProps<{
   config: DocsSharedConfig
@@ -75,18 +70,6 @@ function switchVersion(tag: string): void {
     params: {
       version: tag.replace(/^v/, ''),
       lang: props.lang || defaultLang.value,
-      page: props.page || 'index',
-    },
-  })
-  emit('navigate')
-}
-
-function switchLang(folder: string): void {
-  router.push({
-    name: 'docs',
-    params: {
-      version: cleanVersion.value,
-      lang: folder,
       page: props.page || 'index',
     },
   })
