@@ -1,6 +1,9 @@
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/woff2/JetBrainsMono-Regular-subset.woff2') format('woff2');
+  /* Full face, not the ASCII-only subset: code blocks contain box-drawing
+     tables (│─╭) and ✓/✗ markers that the subset lacks, and their glyph
+     fallback breaks the fixed-width alignment. */
+  src: url('/fonts/woff2/JetBrainsMono-Regular.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
