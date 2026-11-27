@@ -13,7 +13,13 @@
       />
     </div>
 
-    <div v-if="drawerOpen" class="docs-drawer-overlay" @click="drawerOpen = false"></div>
+    <Transition name="docs-overlay">
+      <div
+        v-if="drawerOpen"
+        class="docs-drawer-overlay"
+        @click="drawerOpen = false"
+      ></div>
+    </Transition>
 
     <div class="docs-layout">
       <DocsSidebar
@@ -84,6 +90,24 @@
             {{ t('docs.fallbackNotice') }}
           </div>
           <MarkdownView :text="pageText" :lang="resolvedLang || langParam" />
+          <nav v-if="pageLinks.prev || pageLinks.next" class="docs-pager">
+            <router-link
+              v-if="pageLinks.prev"
+              :to="pagerLink(pageLinks.prev)"
+              class="docs-pager-link docs-pager-prev"
+            >
+              <span class="docs-pager-caption">← {{ t('docs.previous') }}</span>
+              <span class="docs-pager-title">{{ pagerLabel(pageLinks.prev) }}</span>
+            </router-link>
+            <router-link
+              v-if="pageLinks.next"
+              :to="pagerLink(pageLinks.next)"
+              class="docs-pager-link docs-pager-next"
+            >
+              <span class="docs-pager-caption">{{ t('docs.next') }} →</span>
+              <span class="docs-pager-title">{{ pagerLabel(pageLinks.next) }}</span>
+            </router-link>
+          </nav>
         </template>
       </main>
     </div>
@@ -102,6 +126,7 @@ import { getVersionType } from '../utils/version'
 import DocsSidebar from '../components/docs/DocsSidebar.vue'
 import DocsVersionSelect from '../components/docs/DocsVersionSelect.vue'
 import MarkdownView from '../components/docs/MarkdownView.vue'
+import type { DocsNavEntry } from '../utils/docs'
 
 const route = useRoute()
 const router = useRouter()
@@ -178,6 +203,33 @@ const currentTag = computed(() => {
   const v = versionParam.value.replace(/^v/, '')
   return v ? `v${v}` : ''
 })
+
+// Prev/next pager based on this version's TOC order.
+const pageLinks = computed(() => {
+  const entries = nav.value?.nav
+  if (!entries) return { prev: null, next: null }
+  const idx = entries.findIndex((e) => e.file === fileRef.value)
+  if (idx < 0) return { prev: null, next: null }
+  return {
+    prev: idx > 0 ? entries[idx - 1] : null,
+    next: idx < entries.length - 1 ? entries[idx + 1] : null,
+  }
+})
+
+function pagerLabel(entry: DocsNavEntry): string {
+  return entry.label[langParam.value] ?? entry.label['en'] ?? entry.file
+}
+
+function pagerLink(entry: DocsNavEntry): { name: string; params: Record<string, string> } {
+  return {
+    name: 'docs',
+    params: {
+      version: versionParam.value.replace(/^v/, ''),
+      lang: langParam.value,
+      page: entry.file.replace(/\.md$/, ''),
+    },
+  }
+}
 
 // Mobile-bar version picker: same rule as the sidebar one — switching
 // versions lands on the selected version's index page.
@@ -360,6 +412,68 @@ watch(locale, (lang) => {
   background: rgba(251, 191, 36, 0.08);
   color: #FBBF24;
   font-size: 13px;
+}
+
+/* Drawer overlay fades in/out with the drawer slide instead of
+   popping dark/bright on v-if mount */
+.docs-overlay-enter-active,
+.docs-overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.docs-overlay-enter-from,
+.docs-overlay-leave-to {
+  opacity: 0;
+}
+
+/* Prev/next pager at the end of the content — visible on every
+   breakpoint since it lives in the content flow */
+.docs-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.docs-pager-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 48%;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.4);
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.docs-pager-link:hover {
+  border-color: rgba(71, 140, 191, 0.5);
+  background: rgba(71, 140, 191, 0.08);
+}
+
+.docs-pager-next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.docs-pager-caption {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.docs-pager-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #E2E8F0;
+  transition: color 0.2s;
+}
+
+.docs-pager-link:hover .docs-pager-title {
+  color: #478CBF;
 }
 
 .docs-mobile-bar {

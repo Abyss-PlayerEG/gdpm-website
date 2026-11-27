@@ -133,6 +133,8 @@ const messages = {
       fallbackNotice: 'This page is not available in the selected language, showing the default language version.',
       backToIndex: 'Go to index',
       tryLatest: 'View latest documentation',
+      previous: 'Previous',
+      next: 'Next',
       menu: 'Menu',
       version: 'Version'
     }
@@ -269,6 +271,8 @@ const messages = {
       fallbackNotice: '该页面暂无所选语言版本，已显示默认语言版本。',
       backToIndex: '返回本版首页',
       tryLatest: '查看最新文档',
+      previous: '上一页',
+      next: '下一页',
       menu: '目录',
       version: '版本'
     }
