@@ -21,16 +21,24 @@
 - **配置里故意没有 `channel` / `latest` 字段**——权威来源是 GitHub API，见 §4
 - `versions` 索引按新→旧排序，纯 tag 字符串，用于发现版本目录
 
-### 2.2 URL 模板（配置内已提供，勿硬编码）
+### 2.2 同源代理 `/api/docs`（与 `/api/releases` 同款方案）
+
+浏览器**不直连** GitHub/jsDelivr——文档数据一律经同源代理，外部请求由服务端发起
+（无 CORS、不受本机浏览器代理影响，缓存也集中在服务端）：
 
 ```
-cdn: https://cdn.jsdelivr.net/gh/{repo}@{ref}/docs/{version}/{lang}/{file}   ← 优先
-raw: https://raw.githubusercontent.com/{repo}/{ref}/docs/{version}/{lang}/{file}  ← 兜底
+GET /api/docs?path=docs/<tag>/<lang>/<file>     ← path 为仓库相对路径
 ```
 
-- 替换占位符 `{repo}` `{ref}`（取自共享配置），`{version}` = tag、`{lang}` = 语言目录、`{file}` = 页文件
-- 两源均已实测 200（CORS 开放）
-- **`ref` 当前 = `dev`**（`main` 上只有 v0.1.0a1 目录且无 docs.json）；下次 godot-gdpm 发版 PR 合入 main 后改共享配置的 `source.ref` 为 `main`
+- **服务端取数顺序**：`raw.githubusercontent` 优先（始终新鲜；其 404 即权威——
+  不回退去拿可能过期的 CDN 副本）→ `cdn.jsdelivr` 仅在 raw 不可达时兜底
+- **两份镜像实现**（同 releases 模式）：生产 `functions/api/docs.ts`
+  （Cloudflare Function，`cf.cacheTtl` + `Cache-Control: max-age=300, s-maxage=1800`）；
+  开发 `vite.config.ts` 中间件（出网需 `NODE_USE_ENV_PROXY=1`）
+- **`ref` 是服务端常量 `DOCS_REF = 'dev'`**（两处镜像）；godot-gdpm 配置里的
+  `source.ref` / `source.templates` 网站端**不再消费**（保留作来源文档）
+- **路径校验**：`^docs/…\.(json|md)$` 且禁 `..`（防穿越，违者 400）
+- 客户端保留：配置形状校验（防脏数据）、10s 超时、语言回落链、错误分流（404/网络）
 
 ### 2.3 markdown_extensions → 渲染能力清单
 
@@ -151,18 +159,17 @@ src/
 
 ## 11. 坑与注意
 
-1. **jsDelivr 对分支缓存 ~12h**——开发期改配置后用
-   `https://purge.jsdelivr.net/gh/Abyss-PlayerEG/godot-gdpm@dev/docs/docs.json` 强刷；
-   且**内容校验必须在回退链内执行**——cdn 可能返回 200 但字段过期（实测踩过：陈旧配置
-   直接抛错而不是落到 raw），`fetchSharedConfig`/`fetchVersionNav` 已按"链内校验"实现
+1. **jsDelivr 分支缓存 ~12h 已被架构消解**——服务端 raw 优先（始终新鲜）、cdn 仅在
+   raw 不可达时兜底，浏览器不再直连外网；开发期改配置即时生效，无需 purge
 2. **发布版文档不在对应 tag 里**（docs 是后补提交的）——`ref` 必须是分支；`tag` 字段只标识"文档描述的版本"，两者不可混用
 3. **GitHub Latest 不可推导**（`make_latest` 不进 API、prerelease 标志不管它）——必须复用 `latestTag`
 4. **版本比较要语义化**（`0.0.10 > 0.0.9`），勿字符串排序
-5. **`ref` 切换时机**——godot-gdpm 下次发版 PR 把 docs 合入 main 后，共享配置 `source.ref` 改 `main`
-6. **fetch 必须带超时**（`AbortSignal.timeout(10s)`）——挂起的连接会堵死整个降级链
-   （cdn 卡住则永远轮不到 raw，页面卡 Loading；实测代理环境会遇到）
-7. **开发环境限制**（非代码问题）：本机浏览器到 jsdelivr 的代理隧道间歇失败（raw 兜底接住）；
-   vite `/api/releases` 中间件需 `NODE_USE_ENV_PROXY=1` 才能出网，且无 `.dev.vars` token 时
-   GitHub 限流 403 → releases 拉不到 → Latest 徽标消失（`useGitHubReleases` 的失败不进缓存，
-   配好 token 后刷新即恢复）。**本地已配 `.dev.vars`（gh auth token，已 gitignore）**；
-   生产 Cloudflare 有 token，不受影响
+5. **`ref` 切换时机**——godot-gdpm 下次发版 PR 把 docs 合入 main 后，改服务端常量
+   `DOCS_REF`（`functions/api/docs.ts` + `vite.config.ts` 两处镜像）
+6. **fetch 必须带超时**（`AbortSignal.timeout(10s)`）——客户端同源请求与服务端上游
+   各自带超时，挂起的连接不会卡死加载态（代理环境实测会遇到）
+7. **开发环境限制**（非代码问题）：本机出网依赖代理——代理挂掉时 `/api/docs` 中间件
+   上游 fetch 失败 → **502（表现像"没部署"，实为出网断）**，重启代理即恢复；
+   vite 中间件需 `NODE_USE_ENV_PROXY=1` 才能让 node fetch 走代理；`/api/releases`
+   另需 `.dev.vars` token（已配 = gh auth token，gitignore）否则 GitHub 限流 403 →
+   Latest 徽标消失（失败不进缓存，配好刷新即恢复）。生产 Cloudflare 不受影响
