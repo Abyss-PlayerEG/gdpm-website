@@ -28,14 +28,16 @@ export function useVersionNav(
   nav: Ref<DocsVersionConfig | null>
   loading: Ref<boolean>
   error: Ref<string | null>
+  reload: () => void
 } {
   const nav: Ref<DocsVersionConfig | null> = ref(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const nonce = ref(0)
   let epoch = 0
 
   watch(
-    [config, tag],
+    [config, tag, nonce],
     async ([currentConfig, currentTag]) => {
       const current = ++epoch
       if (!currentConfig || !currentTag) {
@@ -59,5 +61,12 @@ export function useVersionNav(
     { immediate: true },
   )
 
-  return { nav, loading, error }
+  // Drop the cached nav (if any) and re-run the load — used by the
+  // network-error retry button.
+  function reload(): void {
+    if (tag.value) navCache.delete(tag.value)
+    nonce.value += 1
+  }
+
+  return { nav, loading, error, reload }
 }

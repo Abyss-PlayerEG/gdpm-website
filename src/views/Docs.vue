@@ -24,22 +24,60 @@
         <div v-if="configError" class="docs-state docs-state-error">
           <p class="docs-state-title">{{ t('docs.error') }}</p>
           <p class="docs-state-detail">{{ configError }}</p>
-          <button class="docs-retry" type="button" @click="reloadConfig">
-            {{ t('docs.retry') }}
-          </button>
+          <div class="docs-state-actions">
+            <button class="docs-state-btn" type="button" @click="reloadConfig">
+              {{ t('docs.retry') }}
+            </button>
+          </div>
         </div>
-        <div v-else-if="!config || navLoading || pageLoading" class="docs-state">
-          {{ t('docs.loading') }}
+        <div v-else-if="!config || navLoading || pageLoading" class="docs-state docs-loading">
+          <div class="docs-spinner"></div>
+          <p>{{ t('docs.loading') }}</p>
         </div>
         <div v-else-if="navError" class="docs-state docs-state-error">
-          <p class="docs-state-title">{{ t('docs.versionNotFound') }}</p>
+          <p class="docs-state-title">
+            {{ navIsNotFound ? t('docs.versionNotFound') : t('docs.error') }}
+          </p>
           <p class="docs-state-detail">{{ navError }}</p>
+          <div class="docs-state-actions">
+            <button
+              v-if="navIsNotFound"
+              class="docs-state-btn"
+              type="button"
+              @click="goLatestDocs"
+            >
+              {{ t('docs.tryLatest') }}
+            </button>
+            <button v-else class="docs-state-btn" type="button" @click="reloadNav">
+              {{ t('docs.retry') }}
+            </button>
+          </div>
         </div>
         <div v-else-if="pageError" class="docs-state docs-state-error">
-          <p class="docs-state-title">{{ t('docs.notFound') }}</p>
+          <p class="docs-state-title">
+            {{ pageIsNotFound ? t('docs.notFound') : t('docs.error') }}
+          </p>
           <p class="docs-state-detail">{{ pageError }}</p>
+          <div class="docs-state-actions">
+            <button
+              v-if="pageIsNotFound"
+              class="docs-state-btn"
+              type="button"
+              @click="goIndex"
+            >
+              {{ t('docs.backToIndex') }}
+            </button>
+            <button v-else class="docs-state-btn" type="button" @click="reloadPage">
+              {{ t('docs.retry') }}
+            </button>
+          </div>
         </div>
-        <MarkdownView v-else :text="pageText" :lang="resolvedLang || langParam" />
+        <template v-else>
+          <div v-if="fallbackNotice" class="docs-fallback">
+            {{ t('docs.fallbackNotice') }}
+          </div>
+          <MarkdownView :text="pageText" :lang="resolvedLang || langParam" />
+        </template>
       </main>
     </div>
   </div>
@@ -83,13 +121,66 @@ const tag = computed(() => {
 const langRef = computed(() => langParam.value || 'en')
 const fileRef = computed(() => `${pageParam.value || 'index'}.md`)
 
-const { nav, loading: navLoading, error: navError } = useVersionNav(config, tag)
+const { nav, loading: navLoading, error: navError, reload: reloadNav } = useVersionNav(
+  config,
+  tag,
+)
 const {
   text: pageText,
   resolvedLang,
   loading: pageLoading,
   error: pageError,
+  reload: reloadPage,
 } = useDocPage(config, tag, langRef, fileRef)
+
+// A404 from the fetch chain means the target genuinely does not exist;
+// anything else (timeout, connection reset, 5xx) is a transient failure.
+const navIsNotFound = computed(() => (navError.value ?? '').includes('404'))
+const pageIsNotFound = computed(() => (pageError.value ?? '').includes('404'))
+
+// The fetch fell back to the default language — say so instead of silently
+// serving the wrong language.
+const fallbackNotice = computed(
+  () => !!pageText.value && !!resolvedLang.value && resolvedLang.value !== langParam.value,
+)
+
+function goIndex(): void {
+  router.push({
+    name: 'docs',
+    params: {
+      version: versionParam.value.replace(/^v/, ''),
+      lang: langParam.value,
+      page: 'index',
+    },
+  })
+}
+
+function goLatestDocs(): void {
+  router.push({
+    name: 'docs',
+    params: {
+      version: pickDefaultVersion().replace(/^v/, ''),
+      lang: langParam.value,
+      page: 'index',
+    },
+  })
+}
+
+// Per-page document title, e.g. "Installation · GDPM Docs 0.0.6".
+const pageTitle = computed(() => {
+  const entry = nav.value?.nav.find((e) => e.file === fileRef.value)
+  if (!entry) return null
+  const label = entry.label[langParam.value] ?? entry.label['en'] ?? entry.file
+  return `${label} · GDPM Docs ${versionParam.value.replace(/^v/, '')}`
+})
+
+watch(
+  pageTitle,
+  (title) => {
+    if (title) document.title = title
+  },
+  { immediate: true },
+)
 
 // Canonical URL: fill any missing param once the config is known.
 // Default version prefers GitHub's latest release when it has docs,
@@ -189,8 +280,7 @@ watch(locale, (lang) => {
   opacity: 0.7;
 }
 
-.docs-retry {
-  margin-top: 16px;
+.docs-state-btn {
   padding: 8px 20px;
   border: 1px solid rgba(71, 140, 191, 0.4);
   border-radius: 6px;
@@ -201,8 +291,46 @@ watch(locale, (lang) => {
   transition: background 0.2s;
 }
 
-.docs-retry:hover {
+.docs-state-btn:hover {
   background: rgba(71, 140, 191, 0.25);
+}
+
+.docs-state-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.docs-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.docs-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(71, 140, 191, 0.2);
+  border-top-color: #478CBF;
+  border-radius: 50%;
+  animation: docs-spin 0.8s linear infinite;
+}
+
+@keyframes docs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.docs-fallback {
+  margin-bottom: 16px;
+  padding: 8px 14px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.08);
+  color: #FBBF24;
+  font-size: 13px;
 }
 
 .docs-mobile-bar {

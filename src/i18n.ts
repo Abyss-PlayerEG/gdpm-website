@@ -129,6 +129,9 @@ const messages = {
       retry: 'Retry',
       versionNotFound: 'No documentation for this version',
       notFound: 'Page not found',
+      fallbackNotice: 'This page is not available in the selected language, showing the default language version.',
+      backToIndex: 'Go to index',
+      tryLatest: 'View latest documentation',
       menu: 'Menu',
       version: 'Version'
     }
@@ -261,6 +264,9 @@ const messages = {
       retry: '重试',
       versionNotFound: '该版本没有文档',
       notFound: '页面不存在',
+      fallbackNotice: '该页面暂无所选语言版本，已显示默认语言版本。',
+      backToIndex: '返回本版首页',
+      tryLatest: '查看最新文档',
       menu: '目录',
       version: '版本'
     }

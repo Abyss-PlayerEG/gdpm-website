@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Lenis from 'lenis'
 import Header from './components/Header.vue'
@@ -53,10 +53,24 @@ import Versions from './components/Versions.vue'
 import Community from './components/Community.vue'
 
 const route = useRoute()
+const router = useRouter()
 const { locale, t } = useI18n()
 const scroller = ref<InstanceType<typeof FullPageScroll>>()
 
-const isHome = computed(() => route.path === '/')
+// The router's initial route is START_LOCATION ('/'); without this gate every
+// deep link (e.g. /docs/…) flashes the home page until the first navigation
+// resolves and the path updates.
+const routerReady = ref(false)
+router.isReady().then(
+  () => {
+    routerReady.value = true
+  },
+  () => {
+    routerReady.value = true
+  },
+)
+
+const isHome = computed(() => route.path === '/' && routerReady.value)
 const showHeader = computed(() => route.name !== 'not-found' && route.name !== 'dev-404')
 
 let lenis: Lenis | null = null

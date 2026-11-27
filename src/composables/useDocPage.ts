@@ -15,15 +15,17 @@ export function useDocPage(
   resolvedLang: Ref<string>
   loading: Ref<boolean>
   error: Ref<string | null>
+  reload: () => void
 } {
   const text = ref('')
   const resolvedLang = ref('')
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const nonce = ref(0)
   let epoch = 0
 
   watch(
-    [config, tag, lang, file],
+    [config, tag, lang, file, nonce],
     async ([currentConfig, currentTag, currentLang, currentFile]) => {
       const current = ++epoch
       if (!currentConfig || !currentTag) {
@@ -65,5 +67,14 @@ export function useDocPage(
     { immediate: true },
   )
 
-  return { text, resolvedLang, loading, error }
+  // Drop the cached entry (if any) and re-run the load — used by the
+  // network-error retry button.
+  function reload(): void {
+    if (tag.value && lang.value && file.value) {
+      pageCache.delete(`${tag.value}/${lang.value}/${file.value}`)
+    }
+    nonce.value += 1
+  }
+
+  return { text, resolvedLang, loading, error, reload }
 }
