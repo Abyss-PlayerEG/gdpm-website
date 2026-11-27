@@ -70,7 +70,8 @@ function switchVersion(tag: string): void {
     params: {
       version: tag.replace(/^v/, ''),
       lang: props.lang || defaultLang.value,
-      page: props.page || 'index',
+      // Switching versions returns to the selected version's index page.
+      page: 'index',
     },
   })
   emit('navigate')
