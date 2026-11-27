@@ -1,6 +1,6 @@
 <template>
   <aside class="docs-sidebar" :class="{ open: drawerOpen }">
-    <div class="docs-sidebar-section">
+    <div class="docs-sidebar-section docs-sidebar-version">
       <p class="docs-sidebar-caption">{{ t('docs.version') }}</p>
       <DocsVersionSelect :versions="config.versions" :current="currentTag" @select="switchVersion" />
     </div>
@@ -184,11 +184,20 @@ function switchVersion(tag: string): void {
 }
 
 @media (max-width: 1024px) {
+  /* the version picker moved to the mobile bar */
+  .docs-sidebar-version {
+    display: none;
+  }
+
   .docs-sidebar {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
+    /* reset the desktop sticky rule's align-self — with flex-start the
+       fixed box resolves to content height instead of stretching to
+       top/bottom (full screen) */
+    align-self: auto;
     z-index: 300;
     width: 280px;
     padding: 84px 20px 24px;

@@ -4,6 +4,13 @@
       <button class="docs-mobile-btn" type="button" @click="drawerOpen = !drawerOpen">
         ☰ {{ t('docs.menu') }}
       </button>
+      <DocsVersionSelect
+        v-if="config"
+        class="docs-mobile-version"
+        :versions="config.versions"
+        :current="currentTag"
+        @select="switchVersion"
+      />
     </div>
 
     <div v-if="drawerOpen" class="docs-drawer-overlay" @click="drawerOpen = false"></div>
@@ -93,6 +100,7 @@ import { useDocPage } from '../composables/useDocPage'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType } from '../utils/version'
 import DocsSidebar from '../components/docs/DocsSidebar.vue'
+import DocsVersionSelect from '../components/docs/DocsVersionSelect.vue'
 import MarkdownView from '../components/docs/MarkdownView.vue'
 
 const route = useRoute()
@@ -161,6 +169,24 @@ function goLatestDocs(): void {
     params: {
       version: pickDefaultVersion().replace(/^v/, ''),
       lang: langParam.value,
+      page: 'index',
+    },
+  })
+}
+
+const currentTag = computed(() => {
+  const v = versionParam.value.replace(/^v/, '')
+  return v ? `v${v}` : ''
+})
+
+// Mobile-bar version picker: same rule as the sidebar one — switching
+// versions lands on the selected version's index page.
+function switchVersion(tag: string): void {
+  router.push({
+    name: 'docs',
+    params: {
+      version: tag.replace(/^v/, ''),
+      lang: langParam.value || locale.value,
       page: 'index',
     },
   })
@@ -340,6 +366,11 @@ watch(locale, (lang) => {
   display: none;
 }
 
+/* The version picker lives in the mobile bar instead of the drawer */
+.docs-mobile-version {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .docs-mobile-bar {
     position: fixed;
@@ -366,6 +397,26 @@ watch(locale, (lang) => {
     color: #E2E8F0;
     font-size: 13px;
     font-weight: 600;
+  }
+
+  .docs-mobile-version {
+    display: block;
+    flex-shrink: 0;
+    min-width: 104px;
+  }
+
+  .docs-mobile-version :deep(.version-select-toggle) {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  /* the bar picker is narrow — anchor its menu to the right edge and let
+     it grow to content so version badges stay inside the box */
+  .docs-mobile-version :deep(.version-select-menu) {
+    left: auto;
+    right: 0;
+    width: max-content;
+    min-width: 100%;
   }
 
   .docs-layout {
