@@ -143,7 +143,7 @@ src/
 
 - [x] **P1 数据层**：`utils/markdown.ts` 骨架 + `useDocsConfig` + `useVersionNav` + `useDocPage`（cdn/raw 降级）——e2e 验证 15 项断言全过（URL 构造、配置/导航/页面拉取、语言回落、cdn 故障降级、404 抛错）
 - [x] **P2 路由与布局**：`/docs` 路由 + `Docs.vue` + 侧栏 nav + 版本/语言切换 + Header「文档」入口（i18n）——浏览器冒烟通过：`/docs` 规范化跳转（默认 latestTag 版本）、双语侧栏、ALPHA/Latest 徽标、版本/语言切换、GFM 渲染（admonition/tabbed 露原文属预期，P3 处理）
-- [ ] **P3 渲染**：`MarkdownView` + admonition 扩展 + tabbed 扩展 + 样式
+- [x] **P3 渲染**：`MarkdownView` + admonition 扩展 + tabbed 扩展 + 样式——marked 自定义块扩展（链内 4 空格反缩进 + `lexer.blockTokens` 嵌套分词 + `parser.parse` 渲染），admonition 默认标题双语映射（裸 `!!! note` → Note/注意），tabbed 事件委托切换；浏览器实测带标题/裸 admonition、tab 切换、中英页面、无原文残留
 - [ ] **P4 增强**：highlight.js + 代码复制 + Latest/渠道徽标 + 移动端抽屉
 - [ ] **P5 打磨**：语言回落提示 + 404 态 + `document.title` + 加载态（复用 `RouteLoading`）
 - [ ] **验收**：3 版本 × 双语 × 全部页面可达；断网 / 配置 404 时优雅降级；徽标与 Versions 页一致
