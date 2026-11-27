@@ -1,19 +1,178 @@
-import { marked } from 'marked'
+import { marked, type Token, type Tokens } from 'marked'
+import type { RendererThis, TokenizerThis } from 'marked'
 
 /**
- * Markdown pipeline for the docs pages. The source files are written for
+ * Markdown pipeline for the docs pages. The sources are written for
  * pymdownx (mkdocs-material); `docs/docs.json` lists every extension in
  * `markdown_extensions`, which doubles as the capability checklist:
  *
+ * - admonition (`!!! note "Title"`) … custom block extension (below)
+ * - tabbed (`=== "Label"` + indented block) … custom block extension (below)
  * - tables / superfences … GFM native (marked)
- * - admonition (`!!! note`) … custom extension — added in P3
- * - tabbed (`=== "label"`) … custom extension — added in P3
  * - highlight … highlight.js hook — added in P4
  */
 
 marked.setOptions({ gfm: true, breaks: false })
 
-export function renderMarkdown(text: string): string {
+// renderMarkdown is synchronous, so a module-level current language is safe.
+let currentLang = 'en'
+
+const ADMONITION_TITLES: Record<string, { en: string; zh: string }> = {
+  note: { en: 'Note', zh: '注意' },
+  warning: { en: 'Warning', zh: '警告' },
+  tip: { en: 'Tip', zh: '提示' },
+  danger: { en: 'Danger', zh: '危险' },
+}
+
+interface AdmonitionToken extends Tokens.Generic {
+  type: 'admonition'
+  admonitionType: string
+  admonitionTitle?: string
+  tokens: Token[]
+}
+
+interface TabbedToken extends Tokens.Generic {
+  type: 'tabbed'
+  tabs: Array<{ label: string; tokens: Token[] }>
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+interface IndentedSection {
+  /** Lines consumed (leading blanks included), counted from the given array. */
+  lineCount: number
+  /** Dedented markdown source. */
+  content: string
+}
+
+/**
+ * Read a 4-space indented block, allowing blank lines inside it (blank runs
+ * are kept only when indented content follows, so trailing blanks are left
+ * for the outer space rule).
+ */
+function readIndentedSection(lines: string[]): IndentedSection | null {
+  let i = 0
+  while (i < lines.length && /^\s*$/.test(lines[i])) i += 1
+  if (i >= lines.length || !/^ {4}/.test(lines[i])) return null
+  const out: string[] = []
+  while (i < lines.length) {
+    const line = lines[i]
+    if (/^ {4}/.test(line)) {
+      out.push(line.slice(4))
+      i += 1
+      continue
+    }
+    if (/^\s*$/.test(line)) {
+      let j = i
+      while (j < lines.length && /^\s*$/.test(lines[j])) j += 1
+      if (j < lines.length && /^ {4}/.test(lines[j])) {
+        while (i < j) {
+          out.push('')
+          i += 1
+        }
+        continue
+      }
+      break
+    }
+    break
+  }
+  if (out.length === 0) return null
+  return { lineCount: i, content: out.join('\n') }
+}
+
+const admonitionExtension = {
+  name: 'admonition',
+  level: 'block' as const,
+  start(src: string): number | void {
+    return src.match(/^!!!/m)?.index
+  },
+  tokenizer(this: TokenizerThis, src: string): Tokens.Generic | undefined {
+    const lines = src.split('\n')
+    const header = /^!!!(?:\s+([a-zA-Z]+))?(?:\s+"([^"]*)")?[ \t]*$/.exec(lines[0] ?? '')
+    if (!header) return undefined
+    const section = readIndentedSection(lines.slice(1))
+    if (!section) return undefined
+    const raw = [lines[0], ...lines.slice(1, 1 + section.lineCount)].join('\n')
+    return {
+      type: 'admonition',
+      raw,
+      admonitionType: (header[1] ?? 'note').toLowerCase(),
+      admonitionTitle: header[2],
+      tokens: this.lexer.blockTokens(section.content, []),
+    }
+  },
+  renderer(this: RendererThis, token: Tokens.Generic): string {
+    const t = token as AdmonitionToken
+    const fallback =
+      ADMONITION_TITLES[t.admonitionType]?.[currentLang === 'zh' ? 'zh' : 'en'] ??
+      t.admonitionType.charAt(0).toUpperCase() + t.admonitionType.slice(1)
+    const title = t.admonitionTitle ?? fallback
+    const titleHtml = `<p class="admonition-title">${escapeHtml(title)}</p>`
+    const body = this.parser.parse(t.tokens)
+    return `<div class="admonition admonition-${escapeHtml(t.admonitionType)}">${titleHtml}${body}</div>\n`
+  },
+}
+
+const tabbedExtension = {
+  name: 'tabbed',
+  level: 'block' as const,
+  childTokens: ['tabs'],
+  start(src: string): number | void {
+    return src.match(/^=== "/m)?.index
+  },
+  tokenizer(this: TokenizerThis, src: string): Tokens.Generic | undefined {
+    const lines = src.split('\n')
+    if (!/^===\s+"/.test(lines[0] ?? '')) return undefined
+    const tabs: Array<{ label: string; tokens: Token[] }> = []
+    let i = 0
+    for (;;) {
+      const save = i
+      while (i < lines.length && /^\s*$/.test(lines[i])) i += 1
+      const header = i < lines.length ? /^===\s+"([^"]*)"[ \t]*$/.exec(lines[i]) : null
+      if (!header) {
+        i = save
+        break
+      }
+      i += 1
+      const section = readIndentedSection(lines.slice(i))
+      if (!section) {
+        i = save
+        break
+      }
+      i += section.lineCount
+      tabs.push({ label: header[1], tokens: this.lexer.blockTokens(section.content, []) })
+    }
+    if (tabs.length === 0) return undefined
+    return { type: 'tabbed', raw: lines.slice(0, i).join('\n'), tabs }
+  },
+  renderer(this: RendererThis, token: Tokens.Generic): string {
+    const t = token as TabbedToken
+    const nav = t.tabs
+      .map(
+        (tab, index) =>
+          `<button type="button" class="tabbed-tab${index === 0 ? ' active' : ''}" data-tab="${index}">${escapeHtml(tab.label)}</button>`,
+      )
+      .join('')
+    const panes = t.tabs
+      .map(
+        (tab, index) =>
+          `<div class="tabbed-pane${index === 0 ? ' active' : ''}" data-pane="${index}">${this.parser.parse(tab.tokens)}</div>`,
+      )
+      .join('')
+    return `<div class="tabbed"><div class="tabbed-nav">${nav}</div><div class="tabbed-content">${panes}</div></div>\n`
+  },
+}
+
+marked.use({ extensions: [admonitionExtension, tabbedExtension] })
+
+export function renderMarkdown(text: string, lang = 'en'): string {
+  currentLang = lang
   const html = marked.parse(text, { async: false })
   return typeof html === 'string' ? html : ''
 }

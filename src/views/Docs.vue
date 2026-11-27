@@ -45,7 +45,7 @@
           <p class="docs-state-title">{{ t('docs.notFound') }}</p>
           <p class="docs-state-detail">{{ pageError }}</p>
         </div>
-        <MarkdownView v-else :text="pageText" />
+        <MarkdownView v-else :text="pageText" :lang="resolvedLang || langParam" />
       </main>
     </div>
   </div>
@@ -93,6 +93,7 @@ const fileRef = computed(() => `${pageParam.value || 'index'}.md`)
 const { nav, loading: navLoading, error: navError } = useVersionNav(config, tag)
 const {
   text: pageText,
+  resolvedLang,
   loading: pageLoading,
   error: pageError,
 } = useDocPage(config, tag, langRef, fileRef)
