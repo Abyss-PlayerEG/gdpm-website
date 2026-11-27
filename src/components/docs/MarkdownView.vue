@@ -1,6 +1,6 @@
 <template>
   <!-- eslint-disable-next-line vue/no-v-html — markdown comes from this repo's own docs/ -->
-  <div ref="root" class="markdown" v-html="html" @click="onTabClick"></div>
+  <div ref="root" class="markdown" v-html="html" @click="onContentClick"></div>
 </template>
 
 <script setup lang="ts">
@@ -16,19 +16,48 @@ const root = ref<HTMLElement | null>(null)
 
 const html = computed(() => renderMarkdown(props.text, props.lang ?? 'en'))
 
-// v-html children produce no Vue listeners — one delegated handler switches tabs.
-function onTabClick(event: MouseEvent): void {
-  const button = (event.target as HTMLElement).closest<HTMLElement>('.tabbed-tab')
-  if (!button || !root.value?.contains(button)) return
-  const group = button.closest<HTMLElement>('.tabbed')
+// v-html children produce no Vue listeners — one delegated handler drives
+// both tab switching and code copying.
+function onContentClick(event: MouseEvent): void {
+  const target = event.target as HTMLElement
+  const copyButton = target.closest<HTMLElement>('.md-code > .copy-btn')
+  if (copyButton && root.value?.contains(copyButton)) {
+    void handleCopy(copyButton)
+    return
+  }
+  const tabButton = target.closest<HTMLElement>('.tabbed-tab')
+  if (!tabButton || !root.value?.contains(tabButton)) return
+  const group = tabButton.closest<HTMLElement>('.tabbed')
   if (!group) return
-  const index = button.dataset.tab
+  const index = tabButton.dataset.tab
   group.querySelectorAll<HTMLElement>('.tabbed-tab').forEach((el) => {
-    el.classList.toggle('active', el === button)
+    el.classList.toggle('active', el === tabButton)
   })
   group.querySelectorAll<HTMLElement>('.tabbed-pane').forEach((el) => {
     el.classList.toggle('active', el.dataset.pane === index)
   })
+}
+
+// Mirrors CopyButton.vue: clipboard API with an execCommand fallback and a
+// 2s copied state on the button itself.
+async function handleCopy(button: HTMLElement): Promise<void> {
+  const codeEl = button.parentElement?.querySelector('code')
+  if (!codeEl) return
+  const text = codeEl.innerText
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+  }
+  button.classList.add('copied')
+  window.setTimeout(() => button.classList.remove('copied'), 2000)
 }
 </script>
 
@@ -160,6 +189,66 @@ function onTabClick(event: MouseEvent): void {
 
 .markdown :deep(img) {
   max-width: 100%;
+}
+
+/* --- code block copy button (content.code.copy) --- */
+
+.markdown :deep(.md-code) {
+  position: relative;
+  margin: 14px 0;
+}
+
+.markdown :deep(.md-code > pre) {
+  margin: 0;
+}
+
+.markdown :deep(.copy-btn) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #64748B;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+.markdown :deep(.copy-btn:hover) {
+  color: #478CBF;
+  background: rgba(71, 140, 191, 0.1);
+  opacity: 1;
+}
+
+.markdown :deep(.copy-icon),
+.markdown :deep(.check-icon) {
+  display: inline-flex;
+  transition: opacity 0.2s;
+}
+
+.markdown :deep(.copy-icon) {
+  opacity: 1;
+}
+
+.markdown :deep(.check-icon) {
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #48BB78;
+}
+
+.markdown :deep(.copy-btn.copied .copy-icon) {
+  opacity: 0;
+}
+
+.markdown :deep(.copy-btn.copied .check-icon) {
+  opacity: 1;
 }
 
 /* --- admonition (pymdownx.admonition) --- */

@@ -169,7 +169,34 @@ const tabbedExtension = {
   },
 }
 
-marked.use({ extensions: [admonitionExtension, tabbedExtension] })
+const COPY_ICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 6V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3v3c0 .552-.45 1-1.007 1H4.007A1 1 0 0 1 3 21l.003-14c0-.552.45-1 1.006-1zM5.002 8L5 20h10V8zM9 6h8v10h2V4H9z"/></svg>'
+const CHECK_ICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m10 15.17l9.192-9.191l1.414 1.414L10 17.999l-6.364-6.364l1.414-1.414z"/></svg>'
+
+marked.use({
+  extensions: [admonitionExtension, tabbedExtension],
+  renderer: {
+    // Wrap each code block with a copy button (features: content.code.copy).
+    // Same icons and behavior as CopyButton.vue — v-html cannot host Vue
+    // components, so the click is delegated in MarkdownView.
+    code(token: Tokens.Code): string {
+      const lang = /^([^\s]*)/.exec(token.lang ?? '')?.[1] ?? ''
+      const langClass = lang ? ` class="language-${escapeHtml(lang)}"` : ''
+      const body = token.escaped ? token.text : escapeHtml(token.text.replace(/\n$/, ''))
+      const label = currentLang === 'zh' ? '复制' : 'Copy'
+      return (
+        '<div class="md-code">' +
+        `<button type="button" class="copy-btn" aria-label="${label}">` +
+        `<span class="copy-icon">${COPY_ICON_SVG}</span>` +
+        `<span class="check-icon">${CHECK_ICON_SVG}</span>` +
+        '</button>' +
+        `<pre><code${langClass}>${body}\n</code></pre>` +
+        '</div>\n'
+      )
+    },
+  },
+})
 
 export function renderMarkdown(text: string, lang = 'en'): string {
   currentLang = lang
