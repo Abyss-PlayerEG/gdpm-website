@@ -106,8 +106,7 @@
           <div v-if="!hasTranslation && locale === 'zh'" class="translation-notice">
             {{ t('download.noTranslation') }}
           </div>
-          <!-- eslint-disable vue/no-v-html -->
-          <div class="release-notes markdown-body" v-html="renderedNotes"></div>
+          <MarkdownView :text="notesText" :lang="locale" class="release-notes" />
         </div>
 
         <div class="links">
@@ -130,12 +129,12 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
-import { marked } from 'marked'
 import { useReleaseDownload, formatSize, formatDate, getPlatform, getArch, getVariant, parseReleaseNotes } from '../composables/useReleaseDownload'
 import { useGitHubReleases } from '../composables/useGitHubReleases'
 import { getVersionType, getBadgeClass } from '../utils/version'
 import type { VersionType } from '../utils/version'
 import CopyButton from '../components/CopyButton.vue'
+import MarkdownView from '../components/docs/MarkdownView.vue'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -156,11 +155,12 @@ const versionTags = computed(() => {
   return tags
 })
 
-const renderedNotes = computed(() => {
+// Release notes render through the same MarkdownView the docs use, so the
+// shared code-block/copy/typography styles apply everywhere.
+const notesText = computed(() => {
   if (!release.value?.body) return ''
   const notes = parseReleaseNotes(release.value.body)
-  const content = locale.value === 'zh' && notes.zh ? notes.zh : notes.en
-  return marked(content)
+  return locale.value === 'zh' && notes.zh ? notes.zh : notes.en
 })
 
 const hasTranslation = computed(() => {
@@ -616,85 +616,13 @@ const getPlatformIcon = (name: string): string => {
   font-size: 13px;
 }
 
+/* Card chrome only — typography, code blocks and links come from
+   MarkdownView so the download page and the docs render identically. */
 .release-notes {
   padding: 24px;
   border-radius: 12px;
   background: rgba(30, 41, 59, 0.4);
   border: 1px solid rgba(51, 65, 85, 0.3);
-  color: #94A3B8;
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.release-notes :deep(h1),
-.release-notes :deep(h2),
-.release-notes :deep(h3) {
-  color: #FFFFFF;
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-
-.release-notes :deep(h1) {
-  font-size: 20px;
-}
-
-.release-notes :deep(h2) {
-  font-size: 18px;
-}
-
-.release-notes :deep(h3) {
-  font-size: 16px;
-}
-
-.release-notes :deep(p) {
-  margin-bottom: 12px;
-}
-
-.release-notes :deep(ul),
-.release-notes :deep(ol) {
-  margin-bottom: 12px;
-  padding-left: 24px;
-}
-
-.release-notes :deep(li) {
-  margin-bottom: 4px;
-}
-
-.release-notes :deep(code) {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(71, 140, 191, 0.1);
-  color: #93C5FD;
-}
-
-.release-notes :deep(pre) {
-  margin-bottom: 12px;
-  padding: 16px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  overflow-x: auto;
-}
-
-.release-notes :deep(pre code) {
-  background: none;
-  padding: 0;
-}
-
-.release-notes :deep(a) {
-  color: #478CBF;
-  text-decoration: none;
-}
-
-.release-notes :deep(a:hover) {
-  text-decoration: underline;
-}
-
-.release-notes :deep(hr) {
-  border: none;
-  border-top: 1px solid rgba(51, 65, 85, 0.3);
-  margin: 16px 0;
 }
 
 .links {
