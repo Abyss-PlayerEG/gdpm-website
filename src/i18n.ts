@@ -76,7 +76,8 @@ const messages = {
       step1Title: 'Install GDPM',
       step2Title: 'Initialize your project or create a new one',
       step3Title: 'Add plugins',
-      or: 'or'
+      or: 'or',
+      viewDocs: 'View Documentation'
     },
     community: {
       title: 'Community',
@@ -211,7 +212,8 @@ const messages = {
       step1Title: '安装 GDPM',
       step2Title: '初始化项目或创建新项目',
       step3Title: '添加插件',
-      or: '或'
+      or: '或',
+      viewDocs: '查看文档'
     },
     community: {
       title: '社区',
