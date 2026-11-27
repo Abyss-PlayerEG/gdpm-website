@@ -26,6 +26,12 @@ const router = createRouter({
       meta: { titleKey: 'pageTitle.versions' }
     },
     {
+      path: '/docs/:version?/:lang?/:page?',
+      name: 'docs',
+      component: () => import('../views/Docs.vue'),
+      meta: { titleKey: 'pageTitle.docs' }
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../views/NotFound.vue'),

@@ -6,10 +6,12 @@ const messages = {
       home: 'Home',
       download: 'Download',
       versions: 'Versions',
+      docs: 'Docs',
       notFound: '404'
     },
     nav: {
       versions: 'All Versions',
+      docs: 'Docs',
       github: 'GitHub',
       pypi: 'PyPI'
     },
@@ -120,6 +122,16 @@ const messages = {
       message: 'Page not found',
       redirect: 'Redirecting in {seconds} seconds...',
       goHome: 'Go Home'
+    },
+    docs: {
+      loading: 'Loading documentation...',
+      error: 'Failed to load documentation',
+      retry: 'Retry',
+      versionNotFound: 'No documentation for this version',
+      notFound: 'Page not found',
+      menu: 'Menu',
+      version: 'Version',
+      language: 'Language'
     }
   },
   zh: {
@@ -127,10 +139,12 @@ const messages = {
       home: '首页',
       download: '下载',
       versions: '版本列表',
+      docs: '文档',
       notFound: '404'
     },
     nav: {
       versions: '全部版本',
+      docs: '文档',
       github: 'GitHub',
       pypi: 'PyPI'
     },
@@ -241,6 +255,16 @@ const messages = {
       message: '页面未找到',
       redirect: '{seconds} 秒后返回首页...',
       goHome: '回到首页'
+    },
+    docs: {
+      loading: '加载文档中...',
+      error: '文档加载失败',
+      retry: '重试',
+      versionNotFound: '该版本没有文档',
+      notFound: '页面不存在',
+      menu: '目录',
+      version: '版本',
+      language: '语言'
     }
   }
 }

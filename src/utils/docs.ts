@@ -76,6 +76,9 @@ function bootstrapUrls(): DocsTemplates {
 
 export const DOCS_BOOTSTRAP_URLS: DocsTemplates = bootstrapUrls()
 
+// A hung connection must not stall the fallback chain (cdn → raw → …).
+const FETCH_TIMEOUT_MS = 10_000
+
 function fillTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (match, key: string) => vars[key] ?? match)
 }
@@ -147,7 +150,7 @@ export async function fetchSharedConfig(): Promise<DocsSharedConfig> {
   let last = 'unreachable'
   for (const url of [urls.cdn, urls.raw]) {
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
       if (res.ok) {
         const data: unknown = await res.json()
         if (isValidSharedConfig(data)) return data
@@ -171,7 +174,7 @@ export async function fetchVersionNav(
   for (const kind of ['cdn', 'raw'] as const) {
     const url = versionConfigUrl(config, tag, kind)
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
       if (res.ok) {
         const data: unknown = await res.json()
         if (isValidVersionNav(data)) return data
@@ -210,7 +213,7 @@ export async function fetchDocPage(
   for (const [tryLang, kind] of attempts) {
     const url = docPageUrl(config, tag, tryLang, file, kind)
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
       if (res.ok) return { text: await res.text(), lang: tryLang }
       last = `${res.status} ← ${url}`
     } catch (e) {
