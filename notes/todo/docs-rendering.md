@@ -141,7 +141,7 @@ src/
 
 ## 10. 实施清单
 
-- [ ] **P1 数据层**：`utils/markdown.ts` 骨架 + `useDocsConfig` + `useVersionNav` + `useDocPage`（cdn/raw 降级）
+- [x] **P1 数据层**：`utils/markdown.ts` 骨架 + `useDocsConfig` + `useVersionNav` + `useDocPage`（cdn/raw 降级）——e2e 验证 15 项断言全过（URL 构造、配置/导航/页面拉取、语言回落、cdn 故障降级、404 抛错）
 - [ ] **P2 路由与布局**：`/docs` 路由 + `Docs.vue` + 侧栏 nav + 版本/语言切换 + Header「文档」入口（i18n）
 - [ ] **P3 渲染**：`MarkdownView` + admonition 扩展 + tabbed 扩展 + 样式
 - [ ] **P4 增强**：highlight.js + 代码复制 + Latest/渠道徽标 + 移动端抽屉
@@ -151,7 +151,9 @@ src/
 ## 11. 坑与注意
 
 1. **jsDelivr 对分支缓存 ~12h**——开发期改配置后用
-   `https://purge.jsdelivr.net/gh/Abyss-PlayerEG/godot-gdpm@dev/docs/docs.json` 强刷
+   `https://purge.jsdelivr.net/gh/Abyss-PlayerEG/godot-gdpm@dev/docs/docs.json` 强刷；
+   且**内容校验必须在回退链内执行**——cdn 可能返回 200 但字段过期（实测踩过：陈旧配置
+   直接抛错而不是落到 raw），`fetchSharedConfig`/`fetchVersionNav` 已按"链内校验"实现
 2. **发布版文档不在对应 tag 里**（docs 是后补提交的）——`ref` 必须是分支；`tag` 字段只标识"文档描述的版本"，两者不可混用
 3. **GitHub Latest 不可推导**（`make_latest` 不进 API、prerelease 标志不管它）——必须复用 `latestTag`
 4. **版本比较要语义化**（`0.0.10 > 0.0.9`），勿字符串排序
