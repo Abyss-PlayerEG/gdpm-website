@@ -6,7 +6,7 @@
         <span class="logo-text">GDPM</span>
       </router-link>
       <nav class="nav-links">
-        <router-link to="/docs" class="nav-link">{{ t('nav.docs') }}</router-link>
+        <router-link :to="docsLink" class="nav-link">{{ t('nav.docs') }}</router-link>
         <router-link to="/version/list" class="nav-link">{{ t('nav.versions') }}</router-link>
         <a href="https://github.com/Abyss-PlayerEG/godot-gdpm" target="_blank" class="nav-link">{{ t('nav.github') }}</a>
         <a href="https://pypi.org/project/godot-gdpm/" target="_blank" class="nav-link">{{ t('nav.pypi') }}</a>
@@ -23,9 +23,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
+const route = useRoute()
+
+// Clicking Docs while already inside the docs section keeps the current
+// page instead of resetting through the bare /docs landing redirect.
+const docsLink = computed(() => (route.name === 'docs' ? route.fullPath : '/docs'))
 
 const toggleLang = () => {
   locale.value = locale.value === 'en' ? 'zh' : 'en'

@@ -195,8 +195,11 @@ function pickDefaultVersion(): string {
 }
 
 watch(
-  config,
-  (cfg) => {
+  // route.path is a source too: the header Docs link can push a bare /docs
+  // while this component is reused (config unchanged → that watch alone
+  // would never re-fire and the page would hang with empty params).
+  [config, () => route.path],
+  ([cfg]) => {
     if (!cfg) return
     if (versionParam.value && langParam.value && pageParam.value) return
     router.replace({
