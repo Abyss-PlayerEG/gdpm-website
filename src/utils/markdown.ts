@@ -195,6 +195,30 @@ marked.use({
         '</div>\n'
       )
     },
+    // Scroll container around the table: a display:block table (the usual
+    // scroll trick) shrink-wraps its rows, so header/row backgrounds stop
+    // short of the card edge on narrow tables.
+    table(token: Tokens.Table): string {
+      const align = token.align
+      const th = token.header
+        .map((cell, i) => {
+          const style = align[i] ? ` style="text-align:${align[i]}"` : ''
+          return `<th${style}>${this.parser.parseInline(cell.tokens)}</th>`
+        })
+        .join('')
+      const body = token.rows
+        .map(
+          (row) =>
+            `<tr>${row
+              .map((cell, i) => {
+                const style = align[i] ? ` style="text-align:${align[i]}"` : ''
+                return `<td${style}>${this.parser.parseInline(cell.tokens)}</td>`
+              })
+              .join('')}</tr>`,
+        )
+        .join('')
+      return `<div class="md-table"><table><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div>\n`
+    },
   },
 })
 

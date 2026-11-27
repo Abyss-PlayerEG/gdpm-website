@@ -159,13 +159,17 @@ async function handleCopy(button: HTMLElement): Promise<void> {
   color: #CBD5E1;
 }
 
-.markdown :deep(table) {
-  display: block;
-  width: 100%;
+.markdown :deep(.md-table) {
   margin: 14px 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown :deep(table) {
+  width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  overflow-x: auto;
 }
 
 .markdown :deep(th) {
@@ -173,12 +177,24 @@ async function handleCopy(button: HTMLElement): Promise<void> {
   color: #F1F5F9;
   font-weight: 600;
   text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .markdown :deep(th),
 .markdown :deep(td) {
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 14px;
+}
+
+.markdown :deep(td) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.markdown :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.markdown :deep(tbody tr:hover) {
+  background: rgba(71, 140, 191, 0.05);
 }
 
 .markdown :deep(hr) {
